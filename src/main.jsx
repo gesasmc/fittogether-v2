@@ -7,6 +7,7 @@ import './v221.js'
 import './v222.js'
 import './v223.js'
 import './v224.js'
+import './v225.js'
 import App from './App.jsx'
 import './styles.css'
 import './v204.css'
@@ -22,6 +23,7 @@ import './v221.css'
 import './v222.css'
 import './v223.css'
 import './v224.css'
+import './v225.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
