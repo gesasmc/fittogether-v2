@@ -46,7 +46,7 @@ const ensureGermanDetails225=()=>{
    li.dataset.ft225German='1'
  })
 }
-const updateVersion225=()=>document.querySelectorAll('body *').forEach(el=>{if(el.children.length===0&&el.textContent?.includes('V2.0.25'))el.textContent=el.textContent.replaceAll('V2.0.25',FT225_VERSION)})
+const updateVersion225=()=>document.querySelectorAll('body *').forEach(el=>{if(el.children.length===0&&(el.textContent?.includes('V2.0.24')||el.textContent?.includes('V2.0.25')))el.textContent=el.textContent.replaceAll('V2.0.24',FT225_VERSION).replaceAll('V2.0.25',FT225_VERSION)})
 let scheduled225=false
 const enhance225=()=>{scheduled225=false;translateVisible225();ensureGermanDetails225();updateVersion225()}
 const scheduleEnhance225=()=>{if(scheduled225)return;scheduled225=true;queueMicrotask(enhance225)}
