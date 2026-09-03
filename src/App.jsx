@@ -1,6 +1,14 @@
-import { BarChart3, Bell, Dumbbell, List, MoreHorizontal, Play, Zap } from 'lucide-react'
+import { BarChart3, Bell, Check, Dumbbell, List, MoreHorizontal, Play } from 'lucide-react'
 
-const days = ['MO', 'DI', 'MI', 'DO', 'FR', 'SA', 'SO']
+const days = [
+  { label: 'MO', done: true },
+  { label: 'DI', done: false },
+  { label: 'MI', done: true },
+  { label: 'DO', done: false },
+  { label: 'FR', done: true },
+  { label: 'SA', done: false },
+  { label: 'SO', done: false },
+]
 
 function App() {
   return (
@@ -16,18 +24,29 @@ function App() {
       </section>
 
       <section className="activity">
-        <div className="activity-ring">
-          <div className="ring-inner"><strong>345</strong><span>MOVES</span></div>
-          <span className="energy"><Zap size={14} fill="currentColor"/></span>
+        <div className="activity-ring weekly-ring">
+          <div className="ring-inner">
+            <strong><span>3</span><em>/ 5</em></strong>
+            <small>TRAININGS</small>
+          </div>
+          <span className="ring-check"><Check size={15} strokeWidth={3}/></span>
         </div>
-        <div className="status">ACTIVE LIFESTYLE</div>
-        <div className="days">{days.map(day => <span className={day === 'FR' ? 'active' : ''} key={day}>{day}</span>)}</div>
+        <div className="status">WOCHENZIEL · 60%</div>
+        <p className="week-label">TRAININGS DIESE WOCHE</p>
+        <div className="days">
+          {days.map(day => (
+            <div className={day.done ? 'day done' : 'day'} key={day.label}>
+              <span>{day.label}</span>
+              <i>{day.done ? <Check size={11} strokeWidth={3}/> : ''}</i>
+            </div>
+          ))}
+        </div>
       </section>
 
       <section className="stats">
-        <div><strong>400</strong><span>KCAL</span></div>
-        <div className="selected"><strong>345</strong><span>MOVES</span></div>
-        <div><strong>2</strong><span>KM</span></div>
+        <div><strong>2:45</strong><span>TRAININGSZEIT</span></div>
+        <div className="selected"><strong>42</strong><span>SÄTZE</span></div>
+        <div><strong>6.8 t</strong><span>VOLUMEN</span></div>
       </section>
 
       <section className="today">
