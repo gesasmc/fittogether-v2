@@ -1,5 +1,5 @@
-// FitTogether V2.0.25: stronger German exercise naming across library, detail, swap and training views.
-const FT225_VERSION='V2.0.25'
+// FitTogether V2.0.26: stronger German exercise naming without observer loops.
+const FT225_VERSION='V2.0.26'
 const exact225=new Map(Object.entries({
   'push up':'Liegestütz','push-up':'Liegestütz','push ups':'Liegestütze','sit up':'Sit-up','sit-up':'Sit-up','sit ups':'Sit-ups','crunch':'Crunch','plank':'Unterarmstütz','side plank':'Seitstütz','superman':'Superman','burpee':'Burpee','jumping jack':'Hampelmann','mountain climber':'Bergsteiger','high knees':'Kniehebelauf','butt kicks':'Anfersen',
   'bench press':'Bankdrücken','barbell bench press':'Langhantel-Bankdrücken','dumbbell bench press':'Kurzhantel-Bankdrücken','incline bench press':'Schrägbankdrücken','decline bench press':'Negativ-Bankdrücken','chest press':'Brustpresse','shoulder press':'Schulterdrücken','military press':'Military Press','overhead press':'Überkopfdrücken','arnold press':'Arnold Press','chest fly':'Brust-Fliegende','pec deck':'Butterfly-Maschine',
@@ -19,7 +19,7 @@ const words225={
  barbell:'Langhantel',dumbbell:'Kurzhantel',kettlebell:'Kettlebell',cable:'Kabelzug',band:'Band',rope:'Seil',machine:'Maschine',smith:'Multipresse',bench:'Bank',lever:'Hebel',weighted:'Zusatzgewicht',bodyweight:'Körpergewicht',
  chest:'Brust',back:'Rücken',shoulder:'Schulter',shoulders:'Schultern',biceps:'Bizeps',triceps:'Trizeps',forearm:'Unterarm',forearms:'Unterarme',wrist:'Handgelenk',lat:'Lat',lats:'Latissimus',leg:'Bein',legs:'Beine',calf:'Wade',calves:'Waden',hamstring:'Beinbeuger',hamstrings:'Beinbeuger',quad:'Quadrizeps',quads:'Quadrizeps',glute:'Gesäß',glutes:'Gesäß',hip:'Hüfte',hips:'Hüften',abs:'Bauch',abdominal:'Bauch',waist:'Bauch',neck:'Nacken',trap:'Trapez',traps:'Trapez',deltoid:'Schulter',delts:'Schultern',ankle:'Sprunggelenk',knee:'Knie',knees:'Knie',arm:'Arm',arms:'Arme',elbow:'Ellenbogen',
  press:'Drücken',curl:'Curl',row:'Rudern',raise:'Heben',extension:'Strecken',flexion:'Beugen',adduction:'Adduktion',abduction:'Abduktion',rotation:'Rotation',fly:'Fliegende',squat:'Kniebeuge',lunge:'Ausfallschritt',deadlift:'Kreuzheben',dip:'Dip',dips:'Dips',shrug:'Schulterheben',crunch:'Crunch',plank:'Unterarmstütz',bridge:'Brücke',kickback:'Kickback',stretch:'Dehnung',jump:'Sprung',running:'Laufen',run:'Laufen',walking:'Gehen',walk:'Gehen',cycling:'Radfahren',cycle:'Radfahren',pedal:'Pedalieren',
- seated:'sitzend',standing:'stehend',lying:'liegend',kneeling:'kniend',incline:'schräg',decline:'negativ',reverse:'umgekehrt',assisted:'unterstützt',alternating:'abwechselnd',alternate:'abwechselnd',single:'einseitig',one:'ein',two:'zwei',arm:'Arm',leg:'Bein',wide:'breit',close:'eng',neutral:'neutral',grip:'Griff',overhead:'über Kopf',behind:'hinter',front:'vorne',rear:'hinten',side:'seitlich',lateral:'seitlich',horizontal:'horizontal',vertical:'vertikal',inner:'innen',outer:'außen',upper:'oberer',lower:'unterer',middle:'mittlerer',straight:'gerade',cross:'überkreuz',around:'um',with:'mit',without:'ohne',on:'auf',to:'zu',from:'von',and:'und',using:'mit',supported:'gestützt',dynamic:'dynamisch',static:'statisch'
+ seated:'sitzend',standing:'stehend',lying:'liegend',kneeling:'kniend',incline:'schräg',decline:'negativ',reverse:'umgekehrt',assisted:'unterstützt',alternating:'abwechselnd',alternate:'abwechselnd',single:'einseitig',one:'ein',two:'zwei',wide:'breit',close:'eng',neutral:'neutral',grip:'Griff',overhead:'über Kopf',behind:'hinter',front:'vorne',rear:'hinten',side:'seitlich',lateral:'seitlich',horizontal:'horizontal',vertical:'vertikal',inner:'innen',outer:'außen',upper:'oberer',lower:'unterer',middle:'mittlerer',straight:'gerade',cross:'überkreuz',around:'um',with:'mit',without:'ohne',on:'auf',to:'zu',from:'von',and:'und',using:'mit',supported:'gestützt',dynamic:'dynamisch',static:'statisch'
 }
 const german225=value=>{
  const source=String(value||'').trim();if(!source)return source
@@ -36,11 +36,18 @@ const translateVisible225=()=>{for(const sel of selectors225)document.querySelec
 const ensureGermanDetails225=()=>{
  const detail=document.querySelector('.exercise-detail-copy');if(!detail)return
  const items=[...detail.querySelectorAll('ol li')];if(!items.length)return
- // Current App.jsx already generates its exercise instructions in German. Mark verified German content
- // and replace only obvious leftover English boilerplate if another source injects it later.
  const replacements=[['Take a stable starting position','Nimm eine stabile Ausgangsposition ein'],['Perform the movement slowly and controlled','Führe die Bewegung langsam und kontrolliert aus'],['Avoid unnecessary momentum','Vermeide unnötigen Schwung'],['Breathe calmly and evenly','Atme ruhig und gleichmäßig weiter']]
- items.forEach(li=>{let t=li.textContent||'';for(const [en,de] of replacements)t=t.replace(en,de);li.textContent=t;li.dataset.ft225German='1'})
+ items.forEach(li=>{
+   if(li.dataset.ft225German)return
+   const before=li.textContent||''
+   let after=before
+   for(const [en,de] of replacements)after=after.replace(en,de)
+   if(after!==before)li.textContent=after
+   li.dataset.ft225German='1'
+ })
 }
-const updateVersion225=()=>document.querySelectorAll('body *').forEach(el=>{if(el.children.length===0&&el.textContent?.includes('V2.0.24'))el.textContent=el.textContent.replaceAll('V2.0.24',FT225_VERSION)})
-const enhance225=()=>{translateVisible225();ensureGermanDetails225();updateVersion225()}
-if(typeof document!=='undefined'){const obs225=new MutationObserver(enhance225);const start225=()=>{enhance225();obs225.observe(document.body,{childList:true,subtree:true})};document.body?start225():document.addEventListener('DOMContentLoaded',start225,{once:true})}
+const updateVersion225=()=>document.querySelectorAll('body *').forEach(el=>{if(el.children.length===0&&el.textContent?.includes('V2.0.25'))el.textContent=el.textContent.replaceAll('V2.0.25',FT225_VERSION)})
+let scheduled225=false
+const enhance225=()=>{scheduled225=false;translateVisible225();ensureGermanDetails225();updateVersion225()}
+const scheduleEnhance225=()=>{if(scheduled225)return;scheduled225=true;queueMicrotask(enhance225)}
+if(typeof document!=='undefined'){const obs225=new MutationObserver(scheduleEnhance225);const start225=()=>{enhance225();obs225.observe(document.body,{childList:true,subtree:true})};document.body?start225():document.addEventListener('DOMContentLoaded',start225,{once:true})}
