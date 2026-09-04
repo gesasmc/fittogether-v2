@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { supabase, supabaseConfigured } from './lib/supabase.js'
 
+const LOGO='/fittogether-icon.svg?v=229'
+
 export default function AuthGate({ children }) {
   const [state, setState] = useState('loading')
   const [mode, setMode] = useState('login')
@@ -68,7 +70,7 @@ export default function AuthGate({ children }) {
   if (state === 'signedin' || state === 'local') return children
 
   if (state === 'loading') {
-    return <main className="ft-auth ft-auth-loading"><img src="/fittogether-icon-512.png" alt="FitTogether" /><span>FitTogether wird geladen …</span></main>
+    return <main className="ft-auth ft-auth-loading"><img src={LOGO} alt="FitTogether" /><span>FitTogether wird geladen …</span></main>
   }
 
   const configured = state !== 'unconfigured'
@@ -76,7 +78,7 @@ export default function AuthGate({ children }) {
   return (
     <main className="ft-auth">
       <section className="ft-auth-card">
-        <img className="ft-auth-logo" src="/fittogether-icon-512.png" alt="FitTogether" />
+        <img className="ft-auth-logo" src={LOGO} alt="FitTogether" />
         <div className="ft-auth-copy">
           <small>FITTOGETHER V2</small>
           <h1>{configured ? (mode === 'login' ? 'Willkommen zurück' : 'Konto erstellen') : 'Cloud noch nicht verbunden'}</h1>
