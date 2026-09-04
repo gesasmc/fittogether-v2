@@ -1,6 +1,6 @@
 import { supabase, supabaseConfigured } from './lib/supabase.js'
 
-export const FITTOGETHER_VERSION = 'V2.0.27'
+export const FITTOGETHER_VERSION = 'V2.0.28'
 
 const fields = {
   profile: 'ft-profile', equipment: 'ft-equipment',
@@ -14,6 +14,9 @@ const read = (key, fallback) => {
   try { return JSON.parse(localStorage.getItem(key) ?? JSON.stringify(fallback)) }
   catch { return fallback }
 }
+const write = (key, value) => {
+  try { localStorage.setItem(key, JSON.stringify(value)) } catch {}
+}
 
 const snapshot = () => ({
   profile: read(fields.profile, {}), equipment: read(fields.equipment, []),
@@ -23,18 +26,47 @@ const snapshot = () => ({
   exercise_history: read(fields.exercise_history, [])
 })
 
+const isEmpty = value => value == null ||
+  (Array.isArray(value) && value.length === 0) ||
+  (typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === 0)
+
+const mergeArray = (remote = [], local = []) => {
+  const seen = new Set()
+  return [...remote, ...local].filter(item => {
+    let key
+    try { key = JSON.stringify(item) } catch { key = String(item) }
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
+const mergeValue = (remote, local) => {
+  if (isEmpty(local)) return remote
+  if (isEmpty(remote)) return local
+  if (Array.isArray(remote) && Array.isArray(local)) return mergeArray(remote, local)
+  if (remote && local && typeof remote === 'object' && typeof local === 'object') return { ...remote, ...local }
+  return local ?? remote
+}
+
 const notConfigured = () => ({ error: new Error('Cloud-Sync ist noch nicht konfiguriert') })
 
 async function getSession() {
   if (!supabaseConfigured || !supabase) return null
   return (await supabase.auth.getSession()).data.session
 }
+
+async function upsertSnapshot(user) {
+  return supabase.from('user_sync').upsert({ user_id: user.id, ...snapshot(), updated_at: new Date().toISOString() })
+}
+
 async function upload() {
   if (!supabaseConfigured || !supabase) return notConfigured()
   const session = await getSession()
   if (!session?.user) return { error: new Error('Nicht angemeldet') }
-  return supabase.from('user_sync').upsert({ user_id: session.user.id, ...snapshot(), updated_at: new Date().toISOString() })
+  return upsertSnapshot(session.user)
 }
+
 async function download() {
   if (!supabaseConfigured || !supabase) return notConfigured()
   const session = await getSession()
@@ -42,10 +74,17 @@ async function download() {
   const result = await supabase.from('user_sync').select('*').eq('user_id', session.user.id).maybeSingle()
   if (result.error) return result
   if (!result.data) return upload()
+
   Object.entries(fields).forEach(([field, key]) => {
-    if (result.data[field] !== undefined && result.data[field] !== null) localStorage.setItem(key, JSON.stringify(result.data[field]))
+    const remote = result.data[field]
+    if (remote === undefined || remote === null) return
+    const fallback = Array.isArray(remote) ? [] : {}
+    const local = read(key, fallback)
+    write(key, mergeValue(remote, local))
   })
-  return result
+
+  const synced = await upsertSnapshot(session.user)
+  return synced.error ? synced : { ...result, merged: true }
 }
 
 window.FitTogetherCloud = {
