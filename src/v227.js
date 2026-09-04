@@ -1,6 +1,6 @@
 import { supabase, supabaseConfigured } from './lib/supabase.js'
 
-export const FITTOGETHER_VERSION = 'V2.0.28'
+export const FITTOGETHER_VERSION = 'V2.0.31'
 
 const fields = {
   profile: 'ft-profile', equipment: 'ft-equipment',
@@ -87,12 +87,49 @@ async function download() {
   return synced.error ? synced : { ...result, merged: true }
 }
 
+let syncTimer = null
+let syncInFlight = false
+const safeUpload = async () => {
+  if (syncInFlight) return
+  syncInFlight = true
+  try { await upload() } finally { syncInFlight = false }
+}
+
+function startAutoSync() {
+  if (!supabaseConfigured || !supabase || syncTimer) return
+  syncTimer = window.setInterval(safeUpload, 30000)
+  document.addEventListener('visibilitychange', onVisibility)
+}
+function stopAutoSync() {
+  if (syncTimer) window.clearInterval(syncTimer)
+  syncTimer = null
+  document.removeEventListener('visibilitychange', onVisibility)
+}
+function onVisibility() {
+  if (document.visibilityState === 'hidden') safeUpload()
+}
+
+async function logout() {
+  if (!supabaseConfigured || !supabase) return notConfigured()
+  await safeUpload()
+  stopAutoSync()
+  return supabase.auth.signOut()
+}
+
+if (supabaseConfigured && supabase) {
+  supabase.auth.getSession().then(({ data }) => { if (data.session) startAutoSync() })
+  supabase.auth.onAuthStateChange((_event, session) => session ? startAutoSync() : stopAutoSync())
+}
+
 window.FitTogetherCloud = {
   configured: supabaseConfigured,
   getSession,
   login: (email, password) => supabaseConfigured && supabase ? supabase.auth.signInWithPassword({ email, password }) : Promise.resolve(notConfigured()),
   register: (email, password) => supabaseConfigured && supabase ? supabase.auth.signUp({ email, password }) : Promise.resolve(notConfigured()),
-  logout: () => supabaseConfigured && supabase ? supabase.auth.signOut() : Promise.resolve(notConfigured()),
+  resetPassword: (email) => supabaseConfigured && supabase ? supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin }) : Promise.resolve(notConfigured()),
+  logout,
   upload,
-  download
+  download,
+  startAutoSync,
+  stopAutoSync
 }
