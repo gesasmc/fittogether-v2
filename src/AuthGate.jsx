@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase, supabaseConfigured } from './lib/supabase.js'
 
-const LOGO='/fittogether-icon.svg?v=229'
+const LOGO='/fittogether-icon-192.png?v=230'
 
 export default function AuthGate({ children }) {
   const [state, setState] = useState('loading')
