@@ -1,4 +1,4 @@
-import { supabase } from './lib/supabase.js'
+import { supabase, supabaseConfigured } from './lib/supabase.js'
 
 export const FITTOGETHER_VERSION = 'V2.0.27'
 
@@ -23,13 +23,20 @@ const snapshot = () => ({
   exercise_history: read(fields.exercise_history, [])
 })
 
-async function getSession() { return (await supabase.auth.getSession()).data.session }
+const notConfigured = () => ({ error: new Error('Cloud-Sync ist noch nicht konfiguriert') })
+
+async function getSession() {
+  if (!supabaseConfigured || !supabase) return null
+  return (await supabase.auth.getSession()).data.session
+}
 async function upload() {
+  if (!supabaseConfigured || !supabase) return notConfigured()
   const session = await getSession()
   if (!session?.user) return { error: new Error('Nicht angemeldet') }
   return supabase.from('user_sync').upsert({ user_id: session.user.id, ...snapshot(), updated_at: new Date().toISOString() })
 }
 async function download() {
+  if (!supabaseConfigured || !supabase) return notConfigured()
   const session = await getSession()
   if (!session?.user) return { error: new Error('Nicht angemeldet') }
   const result = await supabase.from('user_sync').select('*').eq('user_id', session.user.id).maybeSingle()
@@ -42,10 +49,11 @@ async function download() {
 }
 
 window.FitTogetherCloud = {
+  configured: supabaseConfigured,
   getSession,
-  login: (email, password) => supabase.auth.signInWithPassword({ email, password }),
-  register: (email, password) => supabase.auth.signUp({ email, password }),
-  logout: () => supabase.auth.signOut(),
+  login: (email, password) => supabaseConfigured && supabase ? supabase.auth.signInWithPassword({ email, password }) : Promise.resolve(notConfigured()),
+  register: (email, password) => supabaseConfigured && supabase ? supabase.auth.signUp({ email, password }) : Promise.resolve(notConfigured()),
+  logout: () => supabaseConfigured && supabase ? supabase.auth.signOut() : Promise.resolve(notConfigured()),
   upload,
   download
 }
