@@ -1,0 +1,1 @@
+export const FITTOGETHER_VERSION = 'V2.0.27'
