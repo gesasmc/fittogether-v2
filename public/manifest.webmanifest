@@ -9,10 +9,10 @@
   "theme_color": "#070b0d",
   "icons": [
     {
-      "src": "/fittogether-icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "src": "/fittogether-icon.svg?v=229",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
     }
   ]
 }
