@@ -1,7 +1,17 @@
 import { useEffect, useState } from 'react'
 import { supabase, supabaseConfigured } from './lib/supabase.js'
 
-const LOGO='/fittogether-icon-192.png?v=230'
+const LOGO='/fittogether-final-512.png?v=231'
+
+const translateAuthError = (error) => {
+  const text = String(error?.message || '').toLowerCase()
+  if (text.includes('invalid login credentials')) return 'E-Mail oder Passwort ist nicht korrekt.'
+  if (text.includes('email not confirmed')) return 'Bitte bestätige zuerst deine E-Mail-Adresse.'
+  if (text.includes('user already registered')) return 'Für diese E-Mail existiert bereits ein Konto.'
+  if (text.includes('password')) return 'Das Passwort muss mindestens 6 Zeichen lang sein.'
+  if (text.includes('rate limit')) return 'Zu viele Versuche. Bitte kurz warten und erneut probieren.'
+  return error?.message || 'Das hat gerade nicht funktioniert. Bitte erneut versuchen.'
+}
 
 export default function AuthGate({ children }) {
   const [state, setState] = useState('loading')
@@ -10,6 +20,7 @@ export default function AuthGate({ children }) {
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
+  const [syncState, setSyncState] = useState('')
 
   useEffect(() => {
     if (!supabaseConfigured || !supabase) {
@@ -18,11 +29,19 @@ export default function AuthGate({ children }) {
     }
 
     let mounted = true
-    supabase.auth.getSession().then(({ data }) => {
+    const bootstrap = async () => {
+      const { data } = await supabase.auth.getSession()
       if (!mounted) return
-      setState(data.session ? 'signedin' : 'signedout')
-      if (data.session) window.FitTogetherCloud?.download?.().catch(() => {})
-    })
+      if (data.session) {
+        setState('signedin')
+        setSyncState('Daten werden synchronisiert …')
+        const result = await window.FitTogetherCloud?.download?.()
+        if (mounted) setSyncState(result?.error ? 'Cloud-Sync wird später erneut versucht.' : 'Synchronisiert')
+      } else {
+        setState('signedout')
+      }
+    }
+    bootstrap()
 
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!mounted) return
@@ -37,43 +56,65 @@ export default function AuthGate({ children }) {
 
   const submit = async (event) => {
     event.preventDefault()
-    if (!email.trim() || password.length < 6) {
-      setMessage('Bitte E-Mail und mindestens 6 Zeichen beim Passwort eingeben.')
+    const cleanEmail = email.trim()
+    if (!cleanEmail) {
+      setMessage('Bitte gib deine E-Mail-Adresse ein.')
       return
     }
+    if (mode !== 'reset' && password.length < 6) {
+      setMessage('Das Passwort muss mindestens 6 Zeichen lang sein.')
+      return
+    }
+
     setBusy(true)
     setMessage('')
     try {
       if (mode === 'login') {
-        const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
+        const { error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password })
         if (error) throw error
-        const sync = await window.FitTogetherCloud?.download?.()
-        if (sync?.error) setMessage('Angemeldet. Cloud-Sync wird beim nächsten Versuch erneut geprüft.')
-      } else {
-        const { data, error } = await supabase.auth.signUp({ email: email.trim(), password })
+        setSyncState('Daten werden synchronisiert …')
+        const result = await window.FitTogetherCloud?.download?.()
+        setSyncState(result?.error ? 'Angemeldet – Sync wird später erneut versucht.' : 'Angemeldet und synchronisiert')
+      } else if (mode === 'register') {
+        const { data, error } = await supabase.auth.signUp({ email: cleanEmail, password })
         if (error) throw error
         if (data.session) {
           await window.FitTogetherCloud?.upload?.()
           setState('signedin')
+          setSyncState('Konto erstellt und synchronisiert')
         } else {
-          setMessage('Konto erstellt. Bitte bestätige die E-Mail und melde dich danach an.')
+          setMessage('Konto erstellt. Bitte bestätige den Link in deiner E-Mail und melde dich danach an.')
           setMode('login')
+          setPassword('')
         }
+      } else {
+        const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, { redirectTo: window.location.origin })
+        if (error) throw error
+        setMessage('E-Mail zum Zurücksetzen wurde versendet. Bitte prüfe auch deinen Spam-Ordner.')
       }
     } catch (error) {
-      setMessage(error?.message || 'Anmeldung nicht möglich. Bitte erneut versuchen.')
+      setMessage(translateAuthError(error))
     } finally {
       setBusy(false)
     }
   }
 
-  if (state === 'signedin' || state === 'local') return children
+  if (state === 'signedin') {
+    return <>{syncState && <div className="ft-sync-toast">{syncState}</div>}{children}</>
+  }
+  if (state === 'local') return children
 
   if (state === 'loading') {
     return <main className="ft-auth ft-auth-loading"><img src={LOGO} alt="FitTogether" /><span>FitTogether wird geladen …</span></main>
   }
 
   const configured = state !== 'unconfigured'
+  const title = !configured ? 'Cloud noch nicht verbunden' : mode === 'login' ? 'Willkommen zurück' : mode === 'register' ? 'Konto erstellen' : 'Passwort zurücksetzen'
+  const subtitle = !configured
+    ? 'Die App funktioniert lokal. Für Login und Synchronisierung fehlen nur noch die Vercel-Verbindungsdaten.'
+    : mode === 'reset'
+      ? 'Wir senden dir einen Link, mit dem du dein Passwort neu setzen kannst.'
+      : 'Melde dich an, damit deine Trainingsdaten automatisch auf deinen Geräten erhalten bleiben.'
 
   return (
     <main className="ft-auth">
@@ -81,22 +122,26 @@ export default function AuthGate({ children }) {
         <img className="ft-auth-logo" src={LOGO} alt="FitTogether" />
         <div className="ft-auth-copy">
           <small>FITTOGETHER V2</small>
-          <h1>{configured ? (mode === 'login' ? 'Willkommen zurück' : 'Konto erstellen') : 'Cloud noch nicht verbunden'}</h1>
-          <p>{configured ? 'Melde dich an, damit deine Trainingsdaten auf deinen Geräten erhalten bleiben.' : 'Die App funktioniert bereits lokal. Für Login und Synchronisierung fehlen nur noch die Vercel-Verbindungsdaten.'}</p>
+          <h1>{title}</h1>
+          <p>{subtitle}</p>
         </div>
 
         {configured ? (
           <>
-            <div className="ft-auth-tabs" role="tablist">
-              <button className={mode === 'login' ? 'active' : ''} onClick={() => { setMode('login'); setMessage('') }}>Anmelden</button>
-              <button className={mode === 'register' ? 'active' : ''} onClick={() => { setMode('register'); setMessage('') }}>Registrieren</button>
-            </div>
+            {mode !== 'reset' && (
+              <div className="ft-auth-tabs" role="tablist">
+                <button className={mode === 'login' ? 'active' : ''} onClick={() => { setMode('login'); setMessage('') }}>Anmelden</button>
+                <button className={mode === 'register' ? 'active' : ''} onClick={() => { setMode('register'); setMessage('') }}>Registrieren</button>
+              </div>
+            )}
             <form className="ft-auth-form" onSubmit={submit}>
               <label>E-Mail<input type="email" value={email} onChange={e => setEmail(e.target.value)} autoComplete="email" inputMode="email" placeholder="name@beispiel.de" /></label>
-              <label>Passwort<input type="password" value={password} onChange={e => setPassword(e.target.value)} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} placeholder="Mindestens 6 Zeichen" /></label>
+              {mode !== 'reset' && <label>Passwort<input type="password" value={password} onChange={e => setPassword(e.target.value)} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} placeholder="Mindestens 6 Zeichen" /></label>}
               {message && <p className="ft-auth-message">{message}</p>}
-              <button className="ft-auth-primary" type="submit" disabled={busy}>{busy ? 'Bitte warten …' : mode === 'login' ? 'Anmelden' : 'Konto erstellen'}</button>
+              <button className="ft-auth-primary" type="submit" disabled={busy}>{busy ? 'Bitte warten …' : mode === 'login' ? 'Anmelden' : mode === 'register' ? 'Konto erstellen' : 'Reset-Link senden'}</button>
             </form>
+            {mode === 'login' && <button className="ft-auth-secondary" type="button" onClick={() => { setMode('reset'); setMessage('') }}>Passwort vergessen?</button>}
+            {mode === 'reset' && <button className="ft-auth-secondary" type="button" onClick={() => { setMode('login'); setMessage('') }}>Zurück zur Anmeldung</button>}
           </>
         ) : (
           <div className="ft-auth-notice"><span>Cloud-Sync</span><strong>Noch nicht konfiguriert</strong></div>
