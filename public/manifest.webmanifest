@@ -1,0 +1,18 @@
+{
+  "name": "FitTogether V2",
+  "short_name": "FitTogether",
+  "description": "FitTogether – Training, Fortschritt und smarte Planung.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#070b0d",
+  "theme_color": "#070b0d",
+  "icons": [
+    {
+      "src": "/fittogether-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
