@@ -1,5 +1,5 @@
 // FitTogether V2.0.20: start one exercise directly from the exercise library.
-const esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
+const esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]))
 const recordSingleWorkout=name=>{try{const key='ft-completed-workouts';const old=JSON.parse(localStorage.getItem(key)||'[]');localStorage.setItem(key,JSON.stringify([...old,{date:Date.now(),exercises:1,name,single:true}].slice(-100)))}catch{}}
 const startSingleExercise=({name,image,kind})=>{
   if(document.querySelector('.single-training-v220'))return
@@ -13,6 +13,7 @@ const startSingleExercise=({name,image,kind})=>{
   }
   document.body.appendChild(overlay);render()
 }
+if(typeof window!=='undefined')window.FitTogetherStartSingleExercise=startSingleExercise
 const enhanceLibrary=()=>{
   document.querySelectorAll('.exercise-card-v2').forEach(card=>{if(card.dataset.quickStart220)return;card.dataset.quickStart220='1';const badge=document.createElement('span');badge.className='quick-start-v220';badge.innerHTML='▶';badge.setAttribute('aria-label','Übung direkt starten');badge.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();const name=card.querySelector('strong')?.textContent?.trim()||'Übung';const image=card.querySelector('img')?.src||'';const kind=card.querySelector('small')?.textContent||'';startSingleExercise({name,image,kind})});card.appendChild(badge)})
   const detail=document.querySelector('.exercise-detail-copy');if(detail&&!detail.querySelector('.detail-start-v220')){const btn=document.createElement('button');btn.className='detail-start-v220';btn.textContent='▶ Diese Übung starten';btn.onclick=()=>{const name=detail.querySelector('h2')?.textContent?.trim()||'Übung';const image=document.querySelector('.exercise-gif img')?.src||'';const kind=document.querySelector('.page-head small')?.textContent||'';startSingleExercise({name,image,kind})};detail.appendChild(btn)}
