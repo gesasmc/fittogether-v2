@@ -1,4 +1,4 @@
-const CURRENT_VERSION='V2.0.61'
+const CURRENT_VERSION='V2.0.62'
 let checking=false
 
 const VERSION_SELECTOR='.brand b,.training-note,.version,.ft-auth-copy small'
