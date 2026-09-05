@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { supabase, supabaseConfigured } from './lib/supabase.js'
+import { supabase, supabaseConfigured, supabaseEnvStatus } from './lib/supabase.js'
 
 const LOGO='/fittogether-final-512.png?v=231'
+const VERSION='V2.0.32'
 
 const translateAuthError = (error) => {
   const text = String(error?.message || '').toLowerCase()
@@ -111,7 +112,7 @@ export default function AuthGate({ children }) {
   const configured = state !== 'unconfigured'
   const title = !configured ? 'Cloud noch nicht verbunden' : mode === 'login' ? 'Willkommen zurück' : mode === 'register' ? 'Konto erstellen' : 'Passwort zurücksetzen'
   const subtitle = !configured
-    ? 'Die App funktioniert lokal. Für Login und Synchronisierung fehlen nur noch die Vercel-Verbindungsdaten.'
+    ? 'Die App funktioniert lokal. Für Login und Synchronisierung fehlen noch Verbindungsdaten im aktuellen Build.'
     : mode === 'reset'
       ? 'Wir senden dir einen Link, mit dem du dein Passwort neu setzen kannst.'
       : 'Melde dich an, damit deine Trainingsdaten automatisch auf deinen Geräten erhalten bleiben.'
@@ -121,7 +122,7 @@ export default function AuthGate({ children }) {
       <section className="ft-auth-card">
         <img className="ft-auth-logo" src={LOGO} alt="FitTogether" />
         <div className="ft-auth-copy">
-          <small>FITTOGETHER V2</small>
+          <small>FITTOGETHER {VERSION}</small>
           <h1>{title}</h1>
           <p>{subtitle}</p>
         </div>
@@ -144,7 +145,10 @@ export default function AuthGate({ children }) {
             {mode === 'reset' && <button className="ft-auth-secondary" type="button" onClick={() => { setMode('login'); setMessage('') }}>Zurück zur Anmeldung</button>}
           </>
         ) : (
-          <div className="ft-auth-notice"><span>Cloud-Sync</span><strong>Noch nicht konfiguriert</strong></div>
+          <>
+            <div className="ft-auth-notice"><span>Cloud-Sync</span><strong>Noch nicht konfiguriert</strong></div>
+            <p className="ft-auth-message">Diagnose: URL {supabaseEnvStatus.hasUrl ? '✓' : '✗'} · Key {supabaseEnvStatus.hasKey ? '✓' : '✗'}</p>
+          </>
         )}
 
         <button className="ft-auth-local" type="button" onClick={() => setState('local')}>Nur lokal testen</button>
