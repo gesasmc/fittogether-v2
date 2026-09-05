@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase, supabaseConfigured, supabaseEnvStatus } from './lib/supabase.js'
 
 const LOGO='/fittogether-icon-512.png?v=233'
-const VERSION='V2.0.49'
+const VERSION='V2.0.51'
 
 const translateAuthError = (error) => {
   const text = String(error?.message || '').toLowerCase()
@@ -142,8 +142,8 @@ export default function AuthGate({ children }) {
               </div>
             )}
             <form className="ft-auth-form" onSubmit={submit}>
-              <label>E-Mail<input type="email" value={email} onChange={e => setEmail(e.target.value)} autoComplete="email" inputMode="email" placeholder="name@beispiel.de" /></label>
-              {mode !== 'reset' && <label>Passwort<input type="password" value={password} onChange={e => setPassword(e.target.value)} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} placeholder="Mindestens 6 Zeichen" /></label>}
+              <label>E-Mail<input type="email" value={email} onChange={e=>setEmail(e.target.value)} autoComplete="email" inputMode="email" placeholder="name@beispiel.de" /></label>
+              {mode !== 'reset' && <label>Passwort<input type="password" value={password} onChange={e=>setPassword(e.target.value)} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} placeholder="Mindestens 6 Zeichen" /></label>}
               {message && <p className="ft-auth-message">{message}</p>}
               <button className="ft-auth-primary" type="submit" disabled={busy}>{busy ? 'Bitte warten …' : mode === 'login' ? 'Anmelden' : mode === 'register' ? 'Konto erstellen' : 'Reset-Link senden'}</button>
             </form>
