@@ -1,10 +1,11 @@
-// FitTogether V2.0.45: free-workout flow with RIR after every set.
-export const FITTOGETHER_VERSION='V2.0.45'
+// FitTogether V2.0.46: free-workout flow with adaptive RIR after every set.
+export const FITTOGETHER_VERSION='V2.0.46'
 if(typeof window!=='undefined')window.__ft242Active=true
 const KEY242='ft-free-library-v241'
 const read242=(k,f)=>{try{return JSON.parse(localStorage.getItem(k))??f}catch{return f}}
 const write242=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
 const esc242=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
+const roundHalf242=n=>Math.round(n*2)/2
 
 const move242=(index,dir)=>{
   const list=read242(KEY242,[]),next=index+dir
@@ -19,28 +20,45 @@ const finishWorkout242=(items,setLogs)=>{
 }
 const startWorkout242=items=>{
   if(!items.length)return
-  let index=0,set=1,sets=3,weight='10',reps='10'
+  let index=0,set=1,sets=3,weight='10',reps='10',adjustmentNote=''
   const setLogs=[]
   const overlay=document.createElement('div');overlay.className='free-workout-v242'
   const advance=()=>{
     if(set<sets){set++;render();return}
-    if(index<items.length-1){index++;set=1;weight='10';reps='10';render();return}
+    if(index<items.length-1){index++;set=1;weight='10';reps='10';adjustmentNote='';render();return}
     finishWorkout242(items,setLogs)
     overlay.innerHTML=`<div class="free-workout-finished-v242"><span>✓</span><h1>Training gespeichert</h1><p>${items.length} Übungen abgeschlossen.</p><button type="button">Fertig</button></div>`
     overlay.querySelector('button').onclick=()=>{overlay.remove();location.reload()}
+  }
+  const applyRir242=(rir,currentWeight,currentReps)=>{
+    const w=Number(String(currentWeight).replace(',','.'))||0
+    const r=Math.max(1,Number(currentReps)||1)
+    if(rir==='1'){
+      if(w>0){const next=Math.max(0,roundHalf242(w*0.95));weight=String(next);adjustmentNote=`RIR 1 · etwas zu schwer → ${next} kg`}
+      else{reps=String(Math.max(1,r-1));adjustmentNote=`RIR 1 · etwas zu schwer → ${reps} Wdh.`}
+    }else if(rir==='2'){
+      adjustmentNote='RIR 2 · ideal → Werte beibehalten'
+    }else if(rir==='3'){
+      reps=String(r+1);adjustmentNote=`RIR 3 · noch Reserve → ${reps} Wdh.`
+    }else{
+      if(w>0){const next=roundHalf242(w*1.05);weight=String(next);adjustmentNote=`RIR 4+ · zu leicht → ${next} kg`}
+      else{reps=String(r+2);adjustmentNote=`RIR 4+ · zu leicht → ${reps} Wdh.`}
+    }
   }
   const askRir=(item,currentWeight,currentReps)=>{
     const card=overlay.querySelector('.free-workout-card-v242')
     if(!card)return
     card.innerHTML=`<small>SATZ ${set} VON ${sets}</small><h1>${esc242(item.name)}</h1><div class="rir-v245"><span>RIR</span><h2>Wie viele Wiederholungen wären noch gegangen?</h2><div class="rir-options-v245"><button type="button" data-rir="1">1</button><button type="button" data-rir="2">2</button><button type="button" data-rir="3">3</button><button type="button" data-rir="4+">4+</button></div></div>`
     card.querySelectorAll('[data-rir]').forEach(btn=>btn.onclick=()=>{
-      setLogs.push({exercise:item.name,exerciseIndex:index,set,weight:Number(String(currentWeight).replace(',','.'))||0,reps:Number(currentReps)||0,rir:btn.dataset.rir})
+      const rir=btn.dataset.rir
+      setLogs.push({exercise:item.name,exerciseIndex:index,set,weight:Number(String(currentWeight).replace(',','.'))||0,reps:Number(currentReps)||0,rir})
+      applyRir242(rir,currentWeight,currentReps)
       advance()
     })
   }
   const render=()=>{
     const item=items[index],lastExercise=index===items.length-1,lastSet=set===sets
-    overlay.innerHTML=`<div class="free-workout-head-v242"><button type="button" data-close>×</button><span>ÜBUNG ${index+1} / ${items.length}</span></div><div class="free-workout-card-v242">${item.image?`<img src="${esc242(item.image)}" alt="">`:''}<small>SATZ ${set} VON ${sets}</small><h1>${esc242(item.name)}</h1><div class="free-workout-inputs-v242"><label><input data-weight inputmode="decimal" value="${esc242(weight)}"><span>kg</span></label><label><input data-reps inputmode="numeric" value="${esc242(reps)}"><span>Wdh.</span></label></div><button type="button" data-next>${lastExercise&&lastSet?'Satz abschließen':`Satz ${set} abschließen`}</button></div>`
+    overlay.innerHTML=`<div class="free-workout-head-v242"><button type="button" data-close>×</button><span>ÜBUNG ${index+1} / ${items.length}</span></div><div class="free-workout-card-v242">${item.image?`<img src="${esc242(item.image)}" alt="">`:''}<small>SATZ ${set} VON ${sets}</small><h1>${esc242(item.name)}</h1><div class="free-workout-inputs-v242"><label><input data-weight inputmode="decimal" value="${esc242(weight)}"><span>kg</span></label><label><input data-reps inputmode="numeric" value="${esc242(reps)}"><span>Wdh.</span></label></div>${adjustmentNote?`<p class="rir-adjust-v246">${esc242(adjustmentNote)}</p>`:''}<button type="button" data-next>${lastExercise&&lastSet?'Satz abschließen':`Satz ${set} abschließen`}</button></div>`
     overlay.querySelector('[data-close]').onclick=()=>overlay.remove()
     overlay.querySelector('[data-next]').onclick=()=>{
       weight=overlay.querySelector('[data-weight]')?.value||weight
@@ -84,7 +102,7 @@ const renderFree242=(force=false)=>{
 let queued242=false
 const enhance242=()=>{
   queued242=false;renderFree242()
-  document.querySelectorAll('body *').forEach(el=>{if(el.children.length)return;const t=el.textContent||'';if(/V2\.0\.(41|42|43|44)/.test(t))el.textContent=t.replace(/V2\.0\.(41|42|43|44)/g,FITTOGETHER_VERSION)})
+  document.querySelectorAll('body *').forEach(el=>{if(el.children.length)return;const t=el.textContent||'';if(/V2\.0\.(41|42|43|44|45)/.test(t))el.textContent=t.replace(/V2\.0\.(41|42|43|44|45)/g,FITTOGETHER_VERSION)})
 }
 const schedule242=()=>{if(queued242)return;queued242=true;requestAnimationFrame(enhance242)}
 if(typeof document!=='undefined'){
