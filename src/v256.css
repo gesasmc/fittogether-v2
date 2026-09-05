@@ -1,0 +1,7 @@
+/* FitTogether V2.0.56: keep active-training content inside the iPhone viewport. */
+.compact-training{width:100%;max-width:100%;overflow-x:hidden}
+.compact-training .exercise-stage{width:100%;max-width:100%;padding-left:0;padding-right:0}
+.compact-training .exercise-demo-live{width:100%!important;max-width:100%!important;margin-left:0!important;margin-right:0!important}
+.compact-training .exercise-demo-live img{max-width:100%;display:block}
+.compact-training .compact-action{width:100%!important;max-width:100%!important;margin-left:0!important;margin-right:0!important}
+.compact-training .compact-set-card{width:100%;max-width:100%;margin-left:0!important;margin-right:0!important}
