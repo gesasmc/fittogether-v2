@@ -1,5 +1,5 @@
-// FitTogether V2.0.47: free training respects available weights/bodyweight and robust start flow.
-const FT247='V2.0.47'
+// FitTogether V2.0.48: free training respects available weights/bodyweight and remains reusable after exit.
+const FT247='V2.0.48'
 const LIB247='ft-free-library-v241'
 const LOAD247='ft-exercise-loads-v247'
 const read247=(k,f)=>{try{return JSON.parse(localStorage.getItem(k))??f}catch{return f}}
@@ -46,7 +46,7 @@ const finish247=(items,logs)=>{
 }
 const start247=items=>{
   if(!items?.length)return
-  document.querySelector('.training-overlay')?.remove()
+  document.querySelector('.free-workout-v247')?.remove()
   let index=0,set=1,sets=3
   const logs=[]
   const savedLoads=read247(LOAD247,{})
@@ -57,10 +57,11 @@ const start247=items=>{
     weight=choices.length?(choices.includes(num247(saved.weight))?num247(saved.weight):choices[0]):0
     reps=Math.max(1,Number(saved.reps)||10);hint=''
   }
+  const closeWorkout=()=>{overlay.remove()}
   const complete=()=>{
     finish247(items,logs)
     overlay.innerHTML=`<div class="free-finished-v247"><span>✓</span><h1>Training gespeichert</h1><p>${items.length} Übungen abgeschlossen.</p><button type="button">Fertig</button></div>`
-    overlay.querySelector('button').onclick=()=>{overlay.remove();location.reload()}
+    overlay.querySelector('button').onclick=()=>{overlay.remove()}
   }
   const advance=()=>{
     if(set<sets){set++;render();return}
@@ -95,7 +96,7 @@ const start247=items=>{
       ?(choices.length?`<label><select data-weight>${choices.map(v=>`<option value="${v}" ${v===weight?'selected':''}>${String(v).replace('.',',')} kg</option>`).join('')}</select><span>${eq==='dumbbell'?'pro Arm':'gesamt'}</span></label>`:`<div class="bodyweight-v247"><strong>Keine Gewichte hinterlegt</strong><span>In Einstellungen Gewichte hinzufügen</span></div>`)
       :`<div class="bodyweight-v247"><strong>${eq==='bodyweight'?'Körpergewicht':'Ohne Gewichtsangabe'}</strong><span>${eq==='bodyweight'?'Kein Zusatzgewicht nötig':'Wiederholungen werden gespeichert'}</span></div>`
     overlay.innerHTML=`<div class="free-head-v247"><button type="button" data-close>×</button><span>ÜBUNG ${index+1} / ${items.length}</span></div><div class="free-card-v247">${item.image?`<img src="${esc247(item.image)}" alt="">`:''}<small>SATZ ${set} VON ${sets}</small><h1>${esc247(item.name)}</h1>${hint?`<p class="adjust-v247">${esc247(hint)}</p>`:''}<div class="inputs-v247">${weightUi}<label><input data-reps inputmode="numeric" value="${reps}"><span>Wdh.</span></label></div><button type="button" data-next>Satz ${set} abschließen</button></div>`
-    overlay.querySelector('[data-close]').onclick=()=>overlay.remove()
+    overlay.querySelector('[data-close]').onclick=closeWorkout
     overlay.querySelector('[data-next]').onclick=()=>{
       const w=overlay.querySelector('[data-weight]');if(w)weight=num247(w.value)
       reps=Math.max(1,Number(overlay.querySelector('[data-reps]')?.value)||reps)
@@ -116,10 +117,15 @@ const intercept247=e=>{
   if(btn.matches('.training-overlay .begin-button')){
     const title=document.querySelector('.training-overlay h1')?.textContent?.trim()||''
     const items=read247(LIB247,[])
-    if((title==='Training'||title==='Freies Training')&&items.length){e.preventDefault();e.stopImmediatePropagation();start247(items)}
+    if((title==='Training'||title==='Freies Training')&&items.length){
+      e.preventDefault();e.stopImmediatePropagation()
+      // Close React's start overlay through its own close handler so the state resets.
+      document.querySelector('.training-overlay .close-training')?.click()
+      setTimeout(()=>start247(items),0)
+    }
   }
 }
-const version247=()=>document.querySelectorAll('body *').forEach(el=>{if(el.children.length)return;const t=el.textContent||'';if(t.includes('V2.0.46'))el.textContent=t.replaceAll('V2.0.46',FT247)})
+const version247=()=>document.querySelectorAll('body *').forEach(el=>{if(el.children.length)return;const t=el.textContent||'';if(/V2\.0\.(46|47)/.test(t))el.textContent=t.replace(/V2\.0\.(46|47)/g,FT247)})
 let q247=false
 const enhance247=()=>{q247=false;version247()}
 const schedule247=()=>{if(q247)return;q247=true;requestAnimationFrame(enhance247)}
