@@ -1,10 +1,10 @@
-// FitTogether V2.0.43: responsive free-workout flow without mutation rerender loops.
-export const FITTOGETHER_VERSION='V2.0.43'
+// FitTogether V2.0.44: responsive free-workout flow and correct selected-exercise display.
+export const FITTOGETHER_VERSION='V2.0.44'
 if(typeof window!=='undefined')window.__ft242Active=true
 const KEY242='ft-free-library-v241'
 const read242=(k,f)=>{try{return JSON.parse(localStorage.getItem(k))??f}catch{return f}}
 const write242=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
-const esc242=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
+const esc242=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]))
 
 const move242=(index,dir)=>{
   const list=read242(KEY242,[]),next=index+dir
@@ -36,10 +36,24 @@ const startWorkout242=items=>{
   document.body.appendChild(overlay);render()
 }
 
+const ensureBox242=page=>{
+  const oldPicks=page.querySelector('.exercise-picks')
+  const oldAction=page.querySelector('.primary-action')
+  if(oldPicks)oldPicks.style.display='none'
+  if(oldAction)oldAction.style.display='none'
+  let box=page.querySelector('.free-library-v241')
+  if(!box){
+    box=document.createElement('section')
+    box.className='free-library-v241'
+    ;(oldPicks||page.querySelector('.page-head'))?.insertAdjacentElement('afterend',box)
+  }
+  return box
+}
+
 const renderFree242=(force=false)=>{
   const page=[...document.querySelectorAll('.page')].find(p=>p.querySelector('.page-head h1')?.textContent?.trim()==='Freies Training')
   if(!page)return
-  const box=page.querySelector('.free-library-v241');if(!box)return
+  const box=ensureBox242(page);if(!box)return
   const items=read242(KEY242,[])
   const sig=JSON.stringify(items.map(x=>[x.name,x.kind,x.image]))
   if(!force&&box.dataset.sig242===sig)return
@@ -55,7 +69,7 @@ const renderFree242=(force=false)=>{
 let queued242=false
 const enhance242=()=>{
   queued242=false;renderFree242()
-  document.querySelectorAll('body *').forEach(el=>{if(el.children.length)return;const t=el.textContent||'';if(/V2\.0\.(41|42)/.test(t))el.textContent=t.replace(/V2\.0\.(41|42)/g,FITTOGETHER_VERSION)})
+  document.querySelectorAll('body *').forEach(el=>{if(el.children.length)return;const t=el.textContent||'';if(/V2\.0\.(41|42|43)/.test(t))el.textContent=t.replace(/V2\.0\.(41|42|43)/g,FITTOGETHER_VERSION)})
 }
 const schedule242=()=>{if(queued242)return;queued242=true;requestAnimationFrame(enhance242)}
 if(typeof document!=='undefined'){
