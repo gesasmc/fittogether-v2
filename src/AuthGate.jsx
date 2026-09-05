@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase, supabaseConfigured, supabaseEnvStatus } from './lib/supabase.js'
 
 const LOGO='/fittogether-icon-512.png?v=233'
-const VERSION='V2.0.33'
+const VERSION='V2.0.35'
 
 const translateAuthError = (error) => {
   const text = String(error?.message || '').toLowerCase()
@@ -22,6 +22,12 @@ export default function AuthGate({ children }) {
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [syncState, setSyncState] = useState('')
+
+  useEffect(() => {
+    if (!syncState || /wird|daten werden/i.test(syncState)) return
+    const id = window.setTimeout(() => setSyncState(''), 2200)
+    return () => window.clearTimeout(id)
+  }, [syncState])
 
   useEffect(() => {
     if (!supabaseConfigured || !supabase) {
@@ -75,14 +81,14 @@ export default function AuthGate({ children }) {
         if (error) throw error
         setSyncState('Daten werden synchronisiert …')
         const result = await window.FitTogetherCloud?.download?.()
-        setSyncState(result?.error ? 'Angemeldet – Sync wird später erneut versucht.' : 'Angemeldet und synchronisiert')
+        setSyncState(result?.error ? 'Angemeldet – Sync wird später erneut versucht.' : 'Synchronisiert')
       } else if (mode === 'register') {
         const { data, error } = await supabase.auth.signUp({ email: cleanEmail, password })
         if (error) throw error
         if (data.session) {
           await window.FitTogetherCloud?.upload?.()
           setState('signedin')
-          setSyncState('Konto erstellt und synchronisiert')
+          setSyncState('Synchronisiert')
         } else {
           setMessage('Konto erstellt. Bitte bestätige den Link in deiner E-Mail und melde dich danach an.')
           setMode('login')
