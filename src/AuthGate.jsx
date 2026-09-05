@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase, supabaseConfigured, supabaseEnvStatus } from './lib/supabase.js'
 
 const LOGO='/fittogether-icon-512.png?v=233'
-const VERSION='V2.0.45'
+const VERSION='V2.0.46'
 
 const translateAuthError = (error) => {
   const text = String(error?.message || '').toLowerCase()
