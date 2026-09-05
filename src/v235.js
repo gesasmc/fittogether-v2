@@ -15,8 +15,9 @@ const renderWeightChart235=()=>{
     if(historyBlock)historyBlock.insertAdjacentElement('beforebegin',box)
     else stats.appendChild(box)
   }
-  if(box.dataset.signature===JSON.stringify(history))return
-  box.dataset.signature=JSON.stringify(history)
+  const signature=JSON.stringify(history)
+  if(box.dataset.signature===signature)return
+  box.dataset.signature=signature
   if(history.length<2){
     box.innerHTML='<div class="section-title"><span>Gewichtsverlauf</span></div><div class="weight-chart-empty-v235">Ab zwei Gewichtseinträgen erscheint hier dein Verlauf als Diagramm.</div>'
     return
@@ -35,11 +36,19 @@ const renderWeightChart235=()=>{
   box.innerHTML=`<div class="section-title"><span>Gewichtsverlauf</span></div><div class="weight-chart-summary-v235"><div><strong>${esc235(last.weight)} kg</strong><small>Aktuell</small></div><div><strong>${delta>0?'+':''}${delta.toFixed(1)} kg</strong><small>Seit erstem Eintrag</small></div></div><div class="weight-chart-frame-v235"><svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Gewichtsverlauf"><line x1="${padX}" y1="${padTop}" x2="${padX}" y2="${height-padBottom}" class="gridline-v235"/><line x1="${padX}" y1="${height-padBottom}" x2="${width-padX}" y2="${height-padBottom}" class="gridline-v235"/><text x="${padX}" y="18" class="chart-label-v235">${max.toFixed(1)} kg</text><text x="${padX}" y="${height-10}" class="chart-label-v235">${esc235(new Date(first.date).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'}))}</text><text x="${width-padX}" y="${height-10}" text-anchor="end" class="chart-label-v235">${esc235(new Date(last.date).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'}))}</text><polyline points="${points}" class="weight-line-v235"/>${circles}</svg></div>`
 }
 
+const updateVersion235=()=>{
+  document.querySelectorAll('body *').forEach(el=>{
+    if(el.children.length)return
+    const t=el.textContent||''
+    if(/V2\.0\.(17|20|24|25|26|27|28|29|30|31|32|33|34)/.test(t))el.textContent=t.replace(/V2\.0\.(17|20|24|25|26|27|28|29|30|31|32|33|34)/g,FITTOGETHER_VERSION)
+  })
+}
+
 let scheduled235=false
-const enhance235=()=>{scheduled235=false;renderWeightChart235()}
+const enhance235=()=>{scheduled235=false;renderWeightChart235();updateVersion235()}
 const schedule235=()=>{if(scheduled235)return;scheduled235=true;requestAnimationFrame(enhance235)}
 if(typeof document!=='undefined'){
-  const observer=new MutationObserver(m=>{if(m.some(x=>[...x.addedNodes].some(n=>n.nodeType===1&&!(n.classList?.contains('weight-chart-v235')))))schedule235()})
+  const observer=new MutationObserver(m=>{if(m.some(x=>[...x.addedNodes].some(n=>n.nodeType===1&&!n.closest?.('.weight-chart-v235'))))schedule235()})
   const start=()=>{enhance235();observer.observe(document.body,{childList:true,subtree:true})}
   document.body?start():document.addEventListener('DOMContentLoaded',start,{once:true})
 }
