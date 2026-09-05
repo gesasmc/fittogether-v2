@@ -45,6 +45,7 @@ const renderAddState241=(btn,name)=>{
 }
 
 const renderFree241=()=>{
+  if(window.__ft242Active)return
   const page=[...document.querySelectorAll('.page')].find(p=>p.querySelector('.page-head h1')?.textContent?.trim()==='Freies Training')
   if(!page)return
   const oldPicks=page.querySelector('.exercise-picks');const oldAction=page.querySelector('.primary-action')
@@ -52,6 +53,9 @@ const renderFree241=()=>{
   let box=page.querySelector('.free-library-v241')
   if(!box){box=document.createElement('section');box.className='free-library-v241';(oldPicks||page.querySelector('.page-head'))?.insertAdjacentElement('afterend',box)}
   const items=read241()
+  const sig=JSON.stringify(items.map(x=>[x.name,x.kind,x.image]))
+  if(box.dataset.sig241===sig)return
+  box.dataset.sig241=sig
   box.innerHTML=items.length?`<div class="free-head-v241"><strong>Deine Übungen</strong><small>${items.length} gespeichert</small></div><div class="free-list-v241">${items.map((x,i)=>`<div class="free-row-v241"><span><strong>${esc241(x.name)}</strong><small>${esc241(x.kind||'Übung')}</small></span><div><button type="button" data-start="${i}">Starten</button><button type="button" data-remove="${i}" aria-label="Entfernen">×</button></div></div>`).join('')}</div>`:`<div class="free-empty-v241"><strong>Noch keine Übungen ausgewählt</strong><p>Öffne eine Übung in der Bibliothek und tippe auf „Zum freien Training hinzufügen“.</p></div>`
   box.querySelectorAll('[data-start]').forEach(btn=>btn.onclick=()=>{const item=read241()[Number(btn.dataset.start)];if(item)window.FitTogetherStartSingleExercise?.(item)})
   box.querySelectorAll('[data-remove]').forEach(btn=>btn.onclick=()=>{const item=read241()[Number(btn.dataset.remove)];if(item){remove241(item.name);renderFree241();window.FitTogetherCloud?.upload?.()}})
