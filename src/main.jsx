@@ -1,6 +1,5 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import './trainingObserverGuard.js'
 import './versionCheck.js'
 import './v218.js'
 import './v219.js'
