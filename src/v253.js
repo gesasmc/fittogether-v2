@@ -74,10 +74,10 @@ const click253=e=>{
 const version253=()=>document.querySelectorAll('body *').forEach(el=>{if(el.children.length)return;const t=el.textContent||'';if(/V2\.0\.(50|51|52)/.test(t))el.textContent=t.replace(/V2\.0\.(50|51|52)/g,FT253)})
 let q253=false
 const enhance253=()=>{q253=false;enhanceCoach253();version253()}
-const schedule253=()=>{if(q253)return;q253=true;requestAnimationFrame(enhance253)}
+const schedule253=()=>{if(document.querySelector('.rest-overlay')||q253)return;q253=true;requestAnimationFrame(enhance253)}
 if(typeof document!=='undefined'){
  document.addEventListener('click',click253,true)
- const obs=new MutationObserver(m=>{if(m.some(x=>x.addedNodes.length||x.removedNodes.length))schedule253()})
+ const obs=new MutationObserver(m=>{if(document.querySelector('.rest-overlay'))return;if(m.some(x=>x.addedNodes.length||x.removedNodes.length))schedule253()})
  const start=()=>{enhance253();obs.observe(document.body,{childList:true,subtree:true})}
  document.body?start():document.addEventListener('DOMContentLoaded',start,{once:true})
 }
