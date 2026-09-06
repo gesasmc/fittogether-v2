@@ -1,5 +1,5 @@
-// FitTogether V2.0.50: custom plan builder, deletable plan cards, filtered exercise picker with GIF previews.
-const FT249='V2.0.50'
+// FitTogether V2.0.77: custom plan builder with stable exercise search focus.
+const FT249='V2.0.77'
 const MUSCLES249=['abductors','abs','adductors','biceps','calves','cardio','delts','forearms','glutes','hamstrings','lats','levator-scapulae','pectorals','quads','serratus-anterior','spine','traps','triceps','upper-back']
 const API249='https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/api/en/muscles/'
 const DAYS249=[['Mo','Montag'],['Di','Dienstag'],['Mi','Mittwoch'],['Do','Donnerstag'],['Fr','Freitag'],['Sa','Samstag'],['So','Sonntag']]
@@ -34,14 +34,16 @@ const openBuilder249=()=>{
   const openPicker249=day=>{
     pickerDay=day;query='';muscleFilter='all';equipmentFilter='all'
     let picker=overlay.querySelector('.plan-picker-v249');if(!picker){picker=document.createElement('div');picker.className='plan-picker-v249';overlay.appendChild(picker)}
+    const bindPick249=()=>picker.querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>{const x=filterItems249()[Number(b.dataset.pick)];if(!x)return;state.sessions[pickerDay]??=[];state.sessions[pickerDay].push({name:pretty249(x.name),rawName:x.name,query:x.name,sets:3,reps:10,equipment:x.equipment||'',image:x.thumbUrl||x.gifUrl||''});picker.remove();render()})
+    const renderResults249=()=>{const items=filterItems249(),count=picker.querySelector('.plan-picker-count-v250'),results=picker.querySelector('.plan-picker-results-v249');if(count)count.textContent=`${items.length} Übungen`;if(results)results.innerHTML=items.slice(0,100).map((x,i)=>`<button type="button" data-pick="${i}">${x.thumbUrl||x.gifUrl?`<img src="${esc249(x.thumbUrl||x.gifUrl)}" loading="lazy" alt="">`:'<i class="plan-picker-noimg-v250">—</i>'}<span><strong>${esc249(pretty249(x.name))}</strong><small>${esc249(prettyMuscle249(x.muscle))} · ${esc249(equipmentGroup249(x.equipment))}</small></span><b>+</b></button>`).join('')||'<p>Keine Übungen gefunden.</p>';bindPick249()}
     const draw=()=>{
       const items=filterItems249(),equipmentOptions=[...new Set((db249||[]).map(x=>equipmentGroup249(x.equipment)).filter(Boolean))].sort()
       picker.innerHTML=`<div class="plan-picker-card-v249"><div class="plan-picker-head-v249"><strong>Übung hinzufügen</strong><button type="button">×</button></div><input class="plan-picker-search-v249" placeholder="Übung suchen" value="${esc249(query)}"><div class="plan-picker-filters-v250"><select data-muscle><option value="all">Alle Muskeln</option>${MUSCLES249.map(m=>`<option value="${m}" ${muscleFilter===m?'selected':''}>${prettyMuscle249(m)}</option>`).join('')}</select><select data-equipment><option value="all">Alle Geräte</option>${equipmentOptions.map(e=>`<option value="${esc249(e)}" ${equipmentFilter===e?'selected':''}>${esc249(e)}</option>`).join('')}</select></div><div class="plan-picker-count-v250">${items.length} Übungen</div><div class="plan-picker-results-v249">${items.slice(0,100).map((x,i)=>`<button type="button" data-pick="${i}">${x.thumbUrl||x.gifUrl?`<img src="${esc249(x.thumbUrl||x.gifUrl)}" loading="lazy" alt="">`:'<i class="plan-picker-noimg-v250">—</i>'}<span><strong>${esc249(pretty249(x.name))}</strong><small>${esc249(prettyMuscle249(x.muscle))} · ${esc249(equipmentGroup249(x.equipment))}</small></span><b>+</b></button>`).join('')||'<p>Keine Übungen gefunden.</p>'}</div></div>`
       picker.querySelector('.plan-picker-head-v249 button').onclick=()=>picker.remove()
-      const search=picker.querySelector('.plan-picker-search-v249');search.oninput=()=>{query=search.value;draw()}
+      const search=picker.querySelector('.plan-picker-search-v249');search.oninput=()=>{query=search.value;renderResults249()}
       picker.querySelector('[data-muscle]').onchange=e=>{muscleFilter=e.target.value;draw()}
       picker.querySelector('[data-equipment]').onchange=e=>{equipmentFilter=e.target.value;draw()}
-      picker.querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>{const x=filterItems249()[Number(b.dataset.pick)];if(!x)return;state.sessions[pickerDay]??=[];state.sessions[pickerDay].push({name:pretty249(x.name),rawName:x.name,query:x.name,sets:3,reps:10,equipment:x.equipment||'',image:x.thumbUrl||x.gifUrl||''});picker.remove();render()})
+      bindPick249()
     }
     picker.innerHTML='<div class="plan-picker-card-v249"><p>Übungen werden geladen …</p></div>';loadDb249().then(()=>{if(picker.isConnected)draw()})
   }
@@ -69,7 +71,7 @@ const enhancePlans249=()=>{
     card.appendChild(del)
   })
 }
-const version249=()=>document.querySelectorAll('body *').forEach(el=>{if(el.children.length)return;const t=el.textContent||'';if(/V2\.0\.(47|48|49)/.test(t))el.textContent=t.replace(/V2\.0\.(47|48|49)/g,FT249)})
+const version249=()=>document.querySelectorAll('body *').forEach(el=>{if(el.children.length)return;const t=el.textContent||'';if(/V2\.0\.(47|48|49|50|51|52|53|54|55|56|57|58|59|60|61|62|63|64|65|66|67|68|69|70|71|72|73|74|75|76)/.test(t))el.textContent=t.replace(/V2\.0\.\d+/g,FT249)})
 let q249=false
 const enhance249=()=>{q249=false;enhancePlans249();version249()}
 const schedule249=()=>{if(document.querySelector('.rest-overlay')||q249)return;q249=true;requestAnimationFrame(enhance249)}
