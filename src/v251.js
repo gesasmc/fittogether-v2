@@ -1,15 +1,21 @@
-// FitTogether V2.0.52: reliable delete button on every training-plan card without page reload.
-const FT251='V2.0.52'
+// FitTogether V2.0.78: stable plan deletion with tombstones and immediate rebinding.
+const FT251='V2.0.78'
 const read251=(k,f)=>{try{return JSON.parse(localStorage.getItem(k))??f}catch{return f}}
 const write251=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
+const key251=plan=>plan?.createdAt?`created:${plan.createdAt}`:`legacy:${String(plan?.name||'').trim().toLowerCase()}|${JSON.stringify(plan?.weekdays||plan?.days||'')}|${JSON.stringify((plan?.sessions||[]).map(s=>typeof s==='string'?s:s?.title||''))}`
 
 const deletePlan251=async(index,name,wrap)=>{
   if(!confirm(`„${name||'Plan'}“ wirklich löschen?`))return
   const plans=read251('ft-plans',[])
-  if(!plans[index])return
+  const plan=plans[index]
+  if(!plan)return
+  const tombstones=new Set(read251('ft-plan-deletions',[]))
+  tombstones.add(key251(plan))
+  write251('ft-plan-deletions',[...tombstones])
   plans.splice(index,1)
   write251('ft-plans',plans)
   wrap?.remove()
+  enhancePlans251()
   try{await window.FitTogetherCloud?.upload?.()}catch{}
 }
 
@@ -18,14 +24,13 @@ const enhancePlans251=()=>{
   if(!page)return
   const plans=read251('ft-plans',[])
   const wraps=[...page.querySelectorAll('.plan-wrap')]
+  wraps.forEach(wrap=>wrap.querySelectorAll('.plan-delete-v250,.plan-delete-v251').forEach(x=>x.remove()))
   wraps.forEach((wrap,index)=>{
     const card=wrap.querySelector('.plan-card')
     const plan=plans[index]
     if(!card||!plan)return
     wrap.classList.add('deletable-wrap-v251')
     card.classList.add('plan-card-controls-v251')
-    card.querySelectorAll('.plan-delete-v250').forEach(x=>x.remove())
-    if(wrap.querySelector('.plan-delete-v251'))return
     const del=document.createElement('button')
     del.type='button'
     del.className='plan-delete-v251'
@@ -40,7 +45,7 @@ const enhancePlans251=()=>{
 const version251=()=>document.querySelectorAll('body *').forEach(el=>{
   if(el.children.length)return
   const t=el.textContent||''
-  if(/V2\.0\.(50|51)/.test(t))el.textContent=t.replace(/V2\.0\.(50|51)/g,FT251)
+  if(/V2\.0\.(50|51|52)/.test(t))el.textContent=t.replace(/V2\.0\.(50|51|52)/g,FT251)
 })
 let q251=false
 const enhance251=()=>{q251=false;enhancePlans251();version251()}
