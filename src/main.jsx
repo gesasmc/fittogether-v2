@@ -67,6 +67,7 @@ import './v253.css'
 import './v255.css'
 import './v256.css'
 import './v270.css'
+import './v271.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
