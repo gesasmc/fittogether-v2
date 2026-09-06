@@ -87,6 +87,7 @@ import './v282.css'
 import './v283.css'
 import './v284.css'
 import './v285.css'
+import './v288.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode><AuthGate><App /></AuthGate></React.StrictMode>,

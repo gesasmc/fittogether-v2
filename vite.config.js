@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import trainingMemory277 from './vite277.js'
+import trainingResume288 from './vite288.js'
 
 const appBridge286=()=>({
   name:'app-bridge-v286',
@@ -64,5 +65,5 @@ const workoutExperience271=()=>({
 })
 
 export default defineConfig({
-  plugins: [appBridge286(),stableRestTimer(),workoutExperience271(),trainingMemory277(),react()],
+  plugins: [appBridge286(),stableRestTimer(),workoutExperience271(),trainingMemory277(),trainingResume288(),react()],
 })
