@@ -1,29 +1,45 @@
-// FitTogether V2.0.38: exercise-library availability filter and clearer exercise browsing.
-export const FITTOGETHER_VERSION='V2.0.38'
+// FitTogether V2.0.72: exercise-library availability filter and expanded equipment browsing.
+export const FITTOGETHER_VERSION='V2.0.72'
 
 const read238=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key))??fallback}catch{return fallback}}
 const write238=(key,value)=>{try{localStorage.setItem(key,JSON.stringify(value))}catch{}}
 
 const initialEquipment238=()=>{
   const saved=read238('ft-available-equipment-v238',null)
-  if(saved)return saved
+  if(saved)return {
+    bodyweight:true,
+    dumbbell:false,
+    barbell:false,
+    band:false,
+    machine:false,
+    treadmill:false,
+    bike:false,
+    rower:false,
+    ...saved
+  }
   return {
     bodyweight:true,
     dumbbell:read238('ft-dumbbell-weights',[]).length>0,
     barbell:read238('ft-barbell-weights',[]).length>0,
     band:false,
-    machine:false
+    machine:false,
+    treadmill:false,
+    bike:false,
+    rower:false
   }
 }
 
 const matchEquipment238=(text,equipment)=>{
   const t=String(text||'').toLowerCase()
-  if(/cardio|yoga|dehnen/.test(t))return true
+  if(/laufband|treadmill/.test(t))return equipment.treadmill
+  if(/fahrrad|ergometer|bike|bicycle|cycling|cycle/.test(t))return equipment.bike
+  if(/rudergerät|rowing machine|rower/.test(t))return equipment.rower
   if(/kurzhantel|dumbbell/.test(t))return equipment.dumbbell
   if(/langhantel|sz-stange|barbell/.test(t))return equipment.barbell
   if(/körpergewicht|body.?weight/.test(t))return equipment.bodyweight
   if(/widerstandsband|band/.test(t))return equipment.band
   if(/kabelzug|maschine|multipresse|machine|cable/.test(t))return equipment.machine
+  if(/cardio|yoga|dehnen/.test(t))return true
   return false
 }
 
@@ -52,7 +68,10 @@ const renderEquipmentChips238=box=>{
     ['dumbbell','Kurzhantel'],
     ['barbell','Langhantel'],
     ['band','Widerstandsband'],
-    ['machine','Kabel/Maschine']
+    ['machine','Kabel/Maschine'],
+    ['treadmill','Laufband'],
+    ['bike','Fahrrad/Ergometer'],
+    ['rower','Rudergerät']
   ]
   chips.innerHTML=defs.map(([key,label])=>`<button type="button" data-equipment="${key}" class="${equipment238[key]?'active':''}">${label}</button>`).join('')
   chips.querySelectorAll('button').forEach(btn=>btn.onclick=()=>{
@@ -72,7 +91,7 @@ const enhanceExercises238=()=>{
   if(!box){
     box=document.createElement('section')
     box.className='exercise-advanced-v238'
-    box.innerHTML=`<div class="exercise-availability-head-v238"><div><strong>Meine Ausstattung</strong><small class="exercise-count-v238"></small></div><label class="only-mine-v238"><input type="checkbox"><span>Nur verfügbare Übungen</span></label></div><div class="equipment-chips-v238"></div><p>Kurzhantel und Langhantel werden automatisch aus deinen hinterlegten Gewichten erkannt. Weitere Geräte kannst du hier an- oder abwählen.</p>`
+    box.innerHTML=`<div class="exercise-availability-head-v238"><div><strong>Meine Ausstattung</strong><small class="exercise-count-v238"></small></div><label class="only-mine-v238"><input type="checkbox"><span>Nur verfügbare Übungen</span></label></div><div class="equipment-chips-v238"></div><p>Kurzhantel und Langhantel werden automatisch aus deinen hinterlegten Gewichten erkannt. Laufband, Fahrrad/Ergometer, Rudergerät und weitere Geräte kannst du hier an- oder abwählen.</p>`
     filterRow.insertAdjacentElement('afterend',box)
     const cb=box.querySelector('.only-mine-v238 input')
     cb.checked=onlyMine238
