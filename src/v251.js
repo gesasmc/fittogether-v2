@@ -24,7 +24,6 @@ const enhancePlans251=()=>{
     if(!card||!plan)return
     wrap.classList.add('deletable-wrap-v251')
     card.classList.add('plan-card-controls-v251')
-    // Remove the old V2.0.50 nested delete button; nested buttons inside .plan-card caused the card click to fire.
     card.querySelectorAll('.plan-delete-v250').forEach(x=>x.remove())
     if(wrap.querySelector('.plan-delete-v251'))return
     const del=document.createElement('button')
@@ -45,9 +44,9 @@ const version251=()=>document.querySelectorAll('body *').forEach(el=>{
 })
 let q251=false
 const enhance251=()=>{q251=false;enhancePlans251();version251()}
-const schedule251=()=>{if(q251)return;q251=true;requestAnimationFrame(enhance251)}
+const schedule251=()=>{if(document.querySelector('.rest-overlay')||q251)return;q251=true;requestAnimationFrame(enhance251)}
 if(typeof document!=='undefined'){
-  const obs=new MutationObserver(m=>{if(m.some(x=>x.addedNodes.length||x.removedNodes.length))schedule251()})
+  const obs=new MutationObserver(m=>{if(document.querySelector('.rest-overlay'))return;if(m.some(x=>x.addedNodes.length||x.removedNodes.length))schedule251()})
   const start=()=>{enhance251();obs.observe(document.body,{childList:true,subtree:true})}
   document.body?start():document.addEventListener('DOMContentLoaded',start,{once:true})
 }
