@@ -104,10 +104,10 @@ const enhance242=()=>{
   queued242=false;renderFree242()
   document.querySelectorAll('body *').forEach(el=>{if(el.children.length)return;const t=el.textContent||'';if(/V2\.0\.(41|42|43|44|45)/.test(t))el.textContent=t.replace(/V2\.0\.(41|42|43|44|45)/g,FITTOGETHER_VERSION)})
 }
-const schedule242=()=>{if(queued242)return;queued242=true;requestAnimationFrame(enhance242)}
+const schedule242=()=>{if(document.querySelector('.rest-overlay')||queued242)return;queued242=true;requestAnimationFrame(enhance242)}
 if(typeof document!=='undefined'){
  const observer=new MutationObserver(m=>{
-   if(document.querySelector('.free-workout-v242'))return
+   if(document.querySelector('.free-workout-v242')||document.querySelector('.rest-overlay'))return
    if(m.some(x=>x.addedNodes.length||x.removedNodes.length))schedule242()
  })
  const start=()=>{enhance242();observer.observe(document.body,{childList:true,subtree:true})}
