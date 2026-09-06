@@ -1,5 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import './trainingIsolation.js'
 import './versionCheck.js'
 import './v218.js'
 import './v219.js'
