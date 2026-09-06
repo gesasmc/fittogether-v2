@@ -1,7 +1,11 @@
-// FitTogether V2.0.85: interaction stabilization + single exercise uses the normal training flow.
-// Does not modify RestOverlay/timer logic.
+// FitTogether V2.0.86: interaction stabilization + single exercise uses normal React training flow.
+// RestOverlay/timer implementation itself remains untouched.
 const findPlanPage285=()=>[...document.querySelectorAll('.page')].find(p=>p.querySelector('.page-head h1')?.textContent?.trim()==='Trainingspläne')
 const stabilizePlans285=()=>{const page=findPlanPage285();if(!page)return;page.querySelectorAll('.plan-card,.plan-days button,.plan-delete-v251').forEach(b=>{b.style.pointerEvents='auto';b.style.touchAction='manipulation'})}
-const singleExercise285=e=>{const btn=e.target.closest('button');if(!btn)return;const card=btn.closest('.exercise-card-v2');if(!card)return;/* library cards still open detail normally */}
+const itemFromDetail285=()=>{const detail=document.querySelector('.exercise-detail-copy');if(!detail)return null;const name=detail.querySelector('h2')?.textContent?.trim()||'Übung',image=document.querySelector('.exercise-gif img')?.src||'',info=document.querySelector('.detail-page .page-head p')?.textContent||'',equipment=info.split('·').at(-1)?.trim()||'';return{name,query:name,sets:3,reps:'8–12',equipment,image}}
+const itemFromCard285=card=>{const name=card?.querySelector('strong')?.textContent?.trim()||'Übung',image=card?.querySelector('img')?.src||'',info=card?.querySelector('small')?.textContent||'';return{name,query:name,sets:3,reps:'8–12',equipment:info,image}}
+const launch285=item=>{if(!item)return;window.FitTogetherStartNormalTraining?.([item])}
+const interceptSingle285=e=>{const btn=e.target.closest('button,.quick-start-v220');if(!btn)return;if(btn.matches('.detail-start-v220')){e.preventDefault();e.stopImmediatePropagation();launch285(itemFromDetail285());return}if(btn.matches('.quick-start-v220')){e.preventDefault();e.stopImmediatePropagation();launch285(itemFromCard285(btn.closest('.exercise-card-v2')));return}}
+if(typeof window!=='undefined')window.FitTogetherStartSingleExercise=item=>launch285({...item,query:item?.query||item?.name,sets:Number(item?.sets)||3,reps:item?.reps||'8–12'})
 let queued285=false;const enhance285=()=>{queued285=false;stabilizePlans285()};const schedule285=()=>{if(queued285||document.querySelector('.rest-overlay'))return;queued285=true;requestAnimationFrame(enhance285)}
-if(typeof document!=='undefined'){document.addEventListener('click',singleExercise285,true);const obs=new MutationObserver(m=>{if(m.some(x=>x.addedNodes.length||x.removedNodes.length))schedule285()});const start=()=>{enhance285();obs.observe(document.body,{childList:true,subtree:true})};document.body?start():document.addEventListener('DOMContentLoaded',start,{once:true})}
+if(typeof document!=='undefined'){document.addEventListener('click',interceptSingle285,true);const obs=new MutationObserver(m=>{if(m.some(x=>x.addedNodes.length||x.removedNodes.length))schedule285()});const start=()=>{enhance285();obs.observe(document.body,{childList:true,subtree:true})};document.body?start():document.addEventListener('DOMContentLoaded',start,{once:true})}
