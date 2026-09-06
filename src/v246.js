@@ -41,10 +41,10 @@ const click246=e=>{
 const version246=()=>document.querySelectorAll('body *').forEach(el=>{if(el.children.length)return;const t=el.textContent||'';if(t.includes('V2.0.45'))el.textContent=t.replaceAll('V2.0.45',FT246)})
 let q246=false
 const enhance246=()=>{q246=false;enhanceCoach246();version246()}
-const schedule246=()=>{if(q246)return;q246=true;requestAnimationFrame(enhance246)}
+const schedule246=()=>{if(document.querySelector('.rest-overlay')||q246)return;q246=true;requestAnimationFrame(enhance246)}
 if(typeof document!=='undefined'){
   document.addEventListener('click',click246,true)
-  const obs=new MutationObserver(m=>{if(m.some(x=>x.addedNodes.length||x.removedNodes.length))schedule246()})
+  const obs=new MutationObserver(m=>{if(document.querySelector('.rest-overlay'))return;if(m.some(x=>x.addedNodes.length||x.removedNodes.length))schedule246()})
   const start=()=>{enhance246();obs.observe(document.body,{childList:true,subtree:true})}
   document.body?start():document.addEventListener('DOMContentLoaded',start,{once:true})
 }
