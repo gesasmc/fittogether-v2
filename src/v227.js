@@ -1,6 +1,6 @@
 import { supabase, supabaseConfigured } from './lib/supabase.js'
 
-export const FITTOGETHER_VERSION = 'V2.0.31'
+export const FITTOGETHER_VERSION = 'V2.0.78'
 
 const fields = {
   profile: 'ft-profile', equipment: 'ft-equipment',
@@ -30,6 +30,31 @@ const isEmpty = value => value == null ||
   (Array.isArray(value) && value.length === 0) ||
   (typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === 0)
 
+const planKey = plan => {
+  if (!plan) return ''
+  if (plan.createdAt) return `created:${plan.createdAt}`
+  const name = String(plan.name || '').trim().toLowerCase()
+  const days = JSON.stringify(plan.weekdays || plan.days || '')
+  const sessions = JSON.stringify((plan.sessions || []).map(s => typeof s === 'string' ? s : s?.title || ''))
+  return `legacy:${name}|${days}|${sessions}`
+}
+
+const mergePlans = (remote = [], local = []) => {
+  const deleted = new Set(read('ft-plan-deletions', []))
+  const byKey = new Map()
+  for (const item of remote || []) {
+    const key = planKey(item)
+    if (!key || deleted.has(key)) continue
+    byKey.set(key, item)
+  }
+  for (const item of local || []) {
+    const key = planKey(item)
+    if (!key || deleted.has(key)) continue
+    byKey.set(key, item)
+  }
+  return [...byKey.values()]
+}
+
 const mergeArray = (remote = [], local = []) => {
   const seen = new Set()
   return [...remote, ...local].filter(item => {
@@ -41,7 +66,8 @@ const mergeArray = (remote = [], local = []) => {
   })
 }
 
-const mergeValue = (remote, local) => {
+const mergeValue = (field, remote, local) => {
+  if (field === 'plans') return mergePlans(remote, local)
   if (isEmpty(local)) return remote
   if (isEmpty(remote)) return local
   if (Array.isArray(remote) && Array.isArray(local)) return mergeArray(remote, local)
@@ -80,7 +106,7 @@ async function download() {
     if (remote === undefined || remote === null) return
     const fallback = Array.isArray(remote) ? [] : {}
     const local = read(key, fallback)
-    write(key, mergeValue(remote, local))
+    write(key, mergeValue(field, remote, local))
   })
 
   const synced = await upsertSnapshot(session.user)
