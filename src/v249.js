@@ -5,7 +5,7 @@ const API249='https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/
 const DAYS249=[['Mo','Montag'],['Di','Dienstag'],['Mi','Mittwoch'],['Do','Donnerstag'],['Fr','Freitag'],['Sa','Samstag'],['So','Sonntag']]
 const read249=(k,f)=>{try{return JSON.parse(localStorage.getItem(k))??f}catch{return f}}
 const write249=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
-const esc249=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
+const esc249=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]))
 let db249=null,loading249=null
 const loadDb249=()=>db249?Promise.resolve(db249):(loading249||(loading249=Promise.all(MUSCLES249.map(m=>fetch(`${API249}${m}.json`).then(r=>r.ok?r.json():{exercises:[]}).then(g=>(g.exercises||[]).map(x=>({...x,muscle:m}))))).then(x=>{db249=x.flat();return db249}).catch(()=>[])))
 const pretty249=name=>String(name||'').replaceAll('-',' ').replace(/\bbarbell\b/gi,'Langhantel').replace(/\bdumbbell\b/gi,'Kurzhantel').replace(/\bbench press\b/gi,'Bankdrücken').replace(/\bshoulder press\b/gi,'Schulterdrücken').replace(/\bbiceps curl\b/gi,'Bizeps-Curl').replace(/\btriceps\b/gi,'Trizeps').replace(/\bsquat\b/gi,'Kniebeuge').replace(/\bdeadlift\b/gi,'Kreuzheben').replace(/\blateral raise\b/gi,'Seitheben').replace(/\bpush up\b/gi,'Liegestütz')
@@ -72,9 +72,9 @@ const enhancePlans249=()=>{
 const version249=()=>document.querySelectorAll('body *').forEach(el=>{if(el.children.length)return;const t=el.textContent||'';if(/V2\.0\.(47|48|49)/.test(t))el.textContent=t.replace(/V2\.0\.(47|48|49)/g,FT249)})
 let q249=false
 const enhance249=()=>{q249=false;enhancePlans249();version249()}
-const schedule249=()=>{if(q249)return;q249=true;requestAnimationFrame(enhance249)}
+const schedule249=()=>{if(document.querySelector('.rest-overlay')||q249)return;q249=true;requestAnimationFrame(enhance249)}
 if(typeof document!=='undefined'){
- const obs=new MutationObserver(m=>{if(document.querySelector('.plan-builder-v249'))return;if(m.some(x=>x.addedNodes.length||x.removedNodes.length))schedule249()})
+ const obs=new MutationObserver(m=>{if(document.querySelector('.plan-builder-v249')||document.querySelector('.rest-overlay'))return;if(m.some(x=>x.addedNodes.length||x.removedNodes.length))schedule249()})
  const start=()=>{enhance249();obs.observe(document.body,{childList:true,subtree:true})}
  document.body?start():document.addEventListener('DOMContentLoaded',start,{once:true})
 }
