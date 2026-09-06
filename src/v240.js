@@ -67,7 +67,7 @@ const enhance240=()=>{
     if(/V2\.0\.3[7-9]/.test(t))el.textContent=t.replace(/V2\.0\.3[7-9]/g,FITTOGETHER_VERSION)
   })
 }
-const schedule240=()=>{if(queued240)return;queued240=true;requestAnimationFrame(enhance240)}
+const schedule240=()=>{if(document.querySelector('.rest-overlay')||queued240)return;queued240=true;requestAnimationFrame(enhance240)}
 if(typeof document!=='undefined'){
   const observer=new MutationObserver(schedule240)
   const start=()=>{enhance240();observer.observe(document.body,{childList:true,subtree:true})}
