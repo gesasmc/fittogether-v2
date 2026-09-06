@@ -66,7 +66,7 @@ const enhance241=()=>{
   queued241=false;enhanceDetail241();renderFree241()
   document.querySelectorAll('body *').forEach(el=>{if(el.children.length)return;const t=el.textContent||'';if(/V2\.0\.40/.test(t))el.textContent=t.replaceAll('V2.0.40',FITTOGETHER_VERSION)})
 }
-const schedule241=()=>{if(queued241)return;queued241=true;requestAnimationFrame(enhance241)}
+const schedule241=()=>{if(document.querySelector('.rest-overlay')||queued241)return;queued241=true;requestAnimationFrame(enhance241)}
 if(typeof document!=='undefined'){
   const observer=new MutationObserver(m=>{if(m.some(x=>x.addedNodes.length||x.removedNodes.length))schedule241()})
   const start=()=>{enhance241();observer.observe(document.body,{childList:true,subtree:true})}
