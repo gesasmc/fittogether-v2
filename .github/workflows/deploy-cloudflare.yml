@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: cloudflare-production-v288
+  group: cloudflare-production-v296
   cancel-in-progress: true
 
 jobs:
