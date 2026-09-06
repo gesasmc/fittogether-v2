@@ -35,6 +35,7 @@ import './v255.js'
 import './v256.js'
 import './v273.js'
 import './v275.js'
+import './v276.js'
 import App from './App.jsx'
 import AuthGate from './AuthGate.jsx'
 import './styles.css'
@@ -72,6 +73,7 @@ import './v270.css'
 import './v271.css'
 import './v273.css'
 import './v275.css'
+import './v276.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
