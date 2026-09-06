@@ -1,12 +1,17 @@
-// FitTogether V2.0.73: one central source for equipment and available weights.
-const read273=(k,f)=>{try{return JSON.parse(localStorage.getItem(k))??f}catch{return f}}
-const write273=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
-const defaults273=()=>({bodyweight:true,dumbbell:read273('ft-dumbbell-weights',[]).length>0,barbell:read273('ft-barbell-weights',[]).length>0,band:false,machine:false,treadmill:false,bike:false,rower:false})
-const profile273=()=>{const p=read273('ft-equipment-profile',null);if(p)return{equipment:{...defaults273(),...(p.equipment||{})},dumbbellWeights:p.dumbbellWeights||read273('ft-dumbbell-weights',[2,4,6,8,10]),barbellWeights:p.barbellWeights||read273('ft-barbell-weights',[20,30,40,50])};const equipment={...defaults273(),...(read273('ft-available-equipment-v238',{})||{})};return{equipment,dumbbellWeights:read273('ft-dumbbell-weights',[2,4,6,8,10]),barbellWeights:read273('ft-barbell-weights',[20,30,40,50])}}
-const save273=p=>{write273('ft-equipment-profile',p);write273('ft-available-equipment-v238',p.equipment);write273('ft-dumbbell-weights',p.dumbbellWeights);write273('ft-barbell-weights',p.barbellWeights);const quick=read273('ft-quickstart-settings-v271',{});write273('ft-quickstart-settings-v271',{...quick,equipment:p.equipment});window.FitTogetherCloud?.upload?.()}
-const defs273=[['bodyweight','Körpergewicht'],['dumbbell','Kurzhanteln'],['barbell','Langhantel'],['band','Widerstandsband'],['machine','Kabel / Kraftmaschine'],['treadmill','Laufband'],['bike','Fahrrad / Ergometer'],['rower','Rudergerät']]
-const render273=(box,force=false)=>{const p=profile273(),sig=JSON.stringify(p.equipment);if(!force&&box.dataset.sig===sig)return;box.dataset.sig=sig;box.innerHTML=`<div class="equipment-central-head-v273"><strong>Meine Ausstattung</strong><small>Wird für Schnellstart, Übungsfilter und Smarten Trainer verwendet.</small></div><div class="equipment-central-grid-v273">${defs273.map(([k,l])=>`<button type="button" data-eq="${k}" class="${p.equipment[k]?'active':''}">${p.equipment[k]?'✓ ':''}${l}</button>`).join('')}</div><p class="equipment-central-note-v273">Gewichte bleiben darunter getrennt gespeichert: Kurzhantel = Gewicht pro Arm, Langhantel = Gesamtgewicht.</p>`;box.querySelectorAll('[data-eq]').forEach(b=>b.onclick=()=>{const n=profile273(),k=b.dataset.eq;n.equipment[k]=!n.equipment[k];save273(n);render273(box,true)})}
-const enhance273=()=>{if(document.querySelector('.rest-overlay'))return;const page=[...document.querySelectorAll('.page')].find(p=>p.querySelector('.sub-head strong')?.textContent?.trim()==='Einstellungen');if(!page)return;let box=page.querySelector('.equipment-central-v273');if(!box){box=document.createElement('section');box.className='equipment-central-v273';const title=[...page.querySelectorAll('.section-title')].find(x=>x.textContent.includes('Meine Gewichte'));if(title)title.insertAdjacentElement('beforebegin',box);else page.appendChild(box);const p=profile273();save273(p)}render273(box)}
-let q273=false
-const schedule273=()=>{if(q273||document.querySelector('.rest-overlay'))return;q273=true;requestAnimationFrame(()=>{q273=false;enhance273()})}
-if(typeof document!=='undefined'){const obs=new MutationObserver(m=>{if(m.some(x=>[...x.addedNodes,...x.removedNodes].some(n=>n.nodeType===1&&!n.closest?.('.equipment-central-v273'))))schedule273()});const start=()=>{enhance273();obs.observe(document.body,{childList:true,subtree:true})};document.body?start():document.addEventListener('DOMContentLoaded',start,{once:true})}
+// FitTogether V2.0.74: keep the existing equipment selector as the single source of truth.
+// The previous V2.0.73 block duplicated the already existing "Meine Ausstattung" UI.
+// No second settings block is rendered here anymore.
+const read274=(k,f)=>{try{return JSON.parse(localStorage.getItem(k))??f}catch{return f}}
+const write274=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
+const sync274=()=>{
+  const equipment=read274('ft-available-equipment-v238',null)
+  if(!equipment)return
+  const profile=read274('ft-equipment-profile',{})
+  write274('ft-equipment-profile',{...profile,equipment})
+  const quick=read274('ft-quickstart-settings-v271',{})
+  write274('ft-quickstart-settings-v271',{...quick,equipment})
+}
+if(typeof window!=='undefined'){
+  sync274()
+  window.addEventListener('storage',e=>{if(e.key==='ft-available-equipment-v238')sync274()})
+}
