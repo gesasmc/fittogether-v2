@@ -2,6 +2,20 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import trainingMemory277 from './vite277.js'
 
+const appBridge286=()=>({
+  name:'app-bridge-v286',
+  enforce:'pre',
+  transform(code,id){
+    if(!id.endsWith('/src/App.jsx'))return null
+    let next=code.replace("onChange={e=>setProfile({...profile,goal:e.target.value)}>","onChange={e=>setProfile({...profile,goal:e.target.value})}>")
+    next=next.replace("useEffect(()=>{window.FitTogetherStartNormalTraining=items=>openTraining(Array.isArray(items)?items:[]);return()=>{delete window.FitTogetherStartNormalTraining}},[]);","")
+    const marker="openTraining=(items=[])=>{setSelection(items);setTrainingOpen(true)};"
+    if(!next.includes(marker))throw new Error('V2.0.86 openTraining marker not found')
+    next=next.replace(marker,marker+"if(typeof window!=='undefined')window.FitTogetherStartNormalTraining=items=>openTraining(Array.isArray(items)?items:[]);")
+    return {code:next,map:null}
+  },
+})
+
 // Stable pause timer: deadline-based, isolated from parent re-renders and
 // persistent ±10 second adjustments for the current and following pauses.
 const stableRestOverlay=`function RestOverlay({seconds,onSkip,onDone}){const total=Math.max(10,Number(seconds)||90);const[left,setLeft]=useState(total);const[base,setBase]=useState(total);const[deadline,setDeadline]=useState(()=>Date.now()+total*1000);const[finish]=useState(()=>onDone);const[skip]=useState(()=>onSkip);useEffect(()=>{let fired=false;let id;const tick=()=>{const next=Math.max(0,Math.ceil((deadline-Date.now())/1000));setLeft(next);if(next<=0&&!fired){fired=true;if(id)clearInterval(id);finish?.()}};id=setInterval(tick,250);tick();return()=>{fired=true;if(id)clearInterval(id)}},[deadline,finish]);const adjust=delta=>{const nextBase=Math.max(10,Math.min(600,base+delta));const actual=nextBase-base;if(!actual)return;setBase(nextBase);setDeadline(d=>Math.max(Date.now()+1000,d+actual*1000));setLeft(v=>Math.max(1,v+actual));try{localStorage.setItem('ft-timer-default',JSON.stringify(nextBase))}catch{}};const fmt=v=>Math.floor(v/60)+':'+String(v%60).padStart(2,'0');return <div className="rest-overlay"><small>PAUSE</small><strong>{fmt(left)}</strong><span>Nächste Übung startet danach automatisch</span><div className="rest-adjust-v270"><button type="button" onClick={()=>adjust(-10)}>−10 Sek.</button><button type="button" onClick={()=>adjust(10)}>+10 Sek.</button></div><button onClick={()=>skip?.()}>Pause überspringen <ChevronRight size={18}/></button></div>}`
@@ -50,5 +64,5 @@ const workoutExperience271=()=>({
 })
 
 export default defineConfig({
-  plugins: [stableRestTimer(),workoutExperience271(),trainingMemory277(),react()],
+  plugins: [appBridge286(),stableRestTimer(),workoutExperience271(),trainingMemory277(),react()],
 })
