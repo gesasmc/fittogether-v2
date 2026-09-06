@@ -119,7 +119,6 @@ const intercept247=e=>{
     const items=read247(LIB247,[])
     if((title==='Training'||title==='Freies Training')&&items.length){
       e.preventDefault();e.stopImmediatePropagation()
-      // Close React's start overlay through its own close handler so the state resets.
       document.querySelector('.training-overlay .close-training')?.click()
       setTimeout(()=>start247(items),0)
     }
@@ -128,10 +127,10 @@ const intercept247=e=>{
 const version247=()=>document.querySelectorAll('body *').forEach(el=>{if(el.children.length)return;const t=el.textContent||'';if(/V2\.0\.(46|47)/.test(t))el.textContent=t.replace(/V2\.0\.(46|47)/g,FT247)})
 let q247=false
 const enhance247=()=>{q247=false;version247()}
-const schedule247=()=>{if(q247)return;q247=true;requestAnimationFrame(enhance247)}
+const schedule247=()=>{if(document.querySelector('.rest-overlay')||q247)return;q247=true;requestAnimationFrame(enhance247)}
 if(typeof document!=='undefined'){
  document.addEventListener('click',intercept247,true)
- const obs=new MutationObserver(m=>{if(m.some(x=>x.addedNodes.length||x.removedNodes.length))schedule247()})
+ const obs=new MutationObserver(m=>{if(document.querySelector('.rest-overlay'))return;if(m.some(x=>x.addedNodes.length||x.removedNodes.length))schedule247()})
  const start=()=>{enhance247();obs.observe(document.body,{childList:true,subtree:true})}
  document.body?start():document.addEventListener('DOMContentLoaded',start,{once:true})
 }
