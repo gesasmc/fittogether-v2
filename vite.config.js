@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import trainingMemory277 from './vite277.js'
 
 // Stable pause timer: deadline-based, isolated from parent re-renders and
 // persistent ±10 second adjustments for the current and following pauses.
@@ -49,5 +50,5 @@ const workoutExperience271=()=>({
 })
 
 export default defineConfig({
-  plugins: [stableRestTimer(),workoutExperience271(),react()],
+  plugins: [stableRestTimer(),workoutExperience271(),trainingMemory277(),react()],
 })
