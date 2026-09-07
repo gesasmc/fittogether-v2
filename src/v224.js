@@ -1,7 +1,6 @@
-// FitTogether V2.0.24: equipment selection + adaptive Smart Trainer.
+// FitTogether V2.0.112: equipment-aware Smart Trainer without global Storage monkey-patching.
 const read224=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key))??fallback}catch{return fallback}}
-const rawSet224=Storage.prototype.setItem
-const write224=(key,value)=>{try{rawSet224.call(localStorage,key,JSON.stringify(value))}catch{}}
+const write224=(key,value)=>{try{localStorage.setItem(key,JSON.stringify(value))}catch{}}
 const norm224=s=>String(s||'').trim().toLowerCase()
 const EQUIPMENT224=[
   ['dumbbell','Kurzhanteln'],['barbell','Langhantel'],['bench','Hantelbank'],['band','Widerstandsbänder'],
@@ -93,12 +92,13 @@ const adaptPlan224=plan=>{
   })
   return{...plan,sessions,equipment:equipment224(),adaptive:true,_smartV224:true,adaptedAt:Date.now()}
 }
-// Intercept only plan saves so React immediately receives an equipment-aware adaptive plan.
-Storage.prototype.setItem=function(key,value){
-  if(this===localStorage&&key==='ft-plans'){
-    try{const plans=JSON.parse(value);if(Array.isArray(plans)&&plans.length){plans[plans.length-1]=adaptPlan224(plans[plans.length-1]);value=JSON.stringify(plans)}}catch{}
-  }
-  return rawSet224.call(this,key,value)
+const adaptLatestSmartPlan224=()=>{
+  const plans=read224('ft-plans',[])
+  if(!Array.isArray(plans)||!plans.length)return
+  const index=plans.length-1,last=plans[index]
+  if(last?._smartV224||!String(last?.name||'').startsWith('Smart Plan'))return
+  const next=plans.slice();next[index]=adaptPlan224(last);write224('ft-plans',next)
+  try{window.FitTogetherCloud?.upload?.()}catch{}
 }
 const renderEquipment224=()=>{
   const page=[...document.querySelectorAll('.page h1')].find(h=>h.textContent?.trim()==='Einstellungen')?.closest('.page');if(!page)return
@@ -113,11 +113,20 @@ const renderEquipment224=()=>{
 }
 const renderCoachInfo224=()=>{
   const page=[...document.querySelectorAll('.page h1')].find(h=>h.textContent?.trim()==='Smarter Trainer')?.closest('.page');if(!page)return
-  const suggestion=page.querySelector('.coach-suggestion');if(!suggestion||page.querySelector('.smart-data-v224'))return
-  const history=read224('ft-exercise-history',[]),names=new Set(history.map(x=>norm224(x.exercise))).size,eq=equipment224().map(eqLabel224)
-  const box=document.createElement('div');box.className='smart-data-v224';box.innerHTML=`<strong>Adaptive Planung aktiv</strong><span>${eq.length?eq.join(' · '):'Nur Körpergewicht'}</span><small>${names?`${names} Übungen mit Leistungs-/RIR-Daten werden berücksichtigt.`:'Sobald du trainierst, fließen RIR und Leistung automatisch in neue Pläne ein.'}</small>`
-  suggestion.insertAdjacentElement('beforebegin',box)
+  const suggestion=page.querySelector('.coach-suggestion');if(!suggestion)return
+  if(!page.querySelector('.smart-data-v224')){
+    const history=read224('ft-exercise-history',[]),names=new Set(history.map(x=>norm224(x.exercise))).size,eq=equipment224().map(eqLabel224)
+    const box=document.createElement('div');box.className='smart-data-v224';box.innerHTML=`<strong>Adaptive Planung aktiv</strong><span>${eq.length?eq.join(' · '):'Nur Körpergewicht'}</span><small>${names?`${names} Übungen mit Leistungs-/RIR-Daten werden berücksichtigt.`:'Sobald du trainierst, fließen RIR und Leistung automatisch in neue Pläne ein.'}</small>`
+    suggestion.insertAdjacentElement('beforebegin',box)
+  }
+  const saveButton=suggestion.querySelector('.primary-action')
+  if(saveButton&&!saveButton.dataset.adapt224){saveButton.dataset.adapt224='1';saveButton.addEventListener('click',()=>queueMicrotask(adaptLatestSmartPlan224))}
 }
-const updateVersion224=()=>document.querySelectorAll('body *').forEach(el=>{if(el.children.length===0&&el.textContent?.includes('V2.0.23'))el.textContent=el.textContent.replaceAll('V2.0.23','V2.0.24')})
-const enhance224=()=>{renderEquipment224();renderCoachInfo224();updateVersion224()}
-if(typeof document!=='undefined'){const obs224=new MutationObserver(enhance224);const start224=()=>{enhance224();obs224.observe(document.body,{childList:true,subtree:true})};document.body?start224():document.addEventListener('DOMContentLoaded',start224,{once:true})}
+let queued224=false
+const enhance224=()=>{queued224=false;renderEquipment224();renderCoachInfo224()}
+const schedule224=()=>{if(queued224||document.querySelector('.active-training,.rest-overlay'))return;queued224=true;requestAnimationFrame(enhance224)}
+if(typeof document!=='undefined'){
+  const obs224=new MutationObserver(m=>{if(m.some(x=>[...x.addedNodes].some(n=>n.nodeType===1&&!n.closest?.('.equipment-picker-v224,.smart-data-v224'))))schedule224()})
+  const start224=()=>{enhance224();obs224.observe(document.body,{childList:true,subtree:true})}
+  document.body?start224():document.addEventListener('DOMContentLoaded',start224,{once:true})
+}
