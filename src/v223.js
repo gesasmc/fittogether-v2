@@ -33,5 +33,5 @@ const interceptRir223=e=>{
   },80)
 }
 document.addEventListener('click',interceptRir223,true)
-const enhance223=()=>{const overlay=findSingle223();if(overlay)ensureNoWeight223(overlay);document.querySelectorAll('body *').forEach(el=>{if(el.children.length===0&&el.textContent?.includes('V2.0.22'))el.textContent=el.textContent.replaceAll('V2.0.22','V2.0.23')})}
+const enhance223=()=>{const overlay=findSingle223();if(overlay)ensureNoWeight223(overlay)}
 if(typeof document!=='undefined'){const obs223=new MutationObserver(enhance223);const start223=()=>{enhance223();obs223.observe(document.body,{childList:true,subtree:true})};document.body?start223():document.addEventListener('DOMContentLoaded',start223,{once:true})}
