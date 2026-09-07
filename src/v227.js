@@ -1,6 +1,6 @@
 import { supabase, supabaseConfigured } from './lib/supabase.js'
 
-export const FITTOGETHER_VERSION = 'V2.0.112'
+export const FITTOGETHER_VERSION = 'V2.0.113'
 
 const fields = {
   profile: 'ft-profile', equipment: 'ft-equipment',
