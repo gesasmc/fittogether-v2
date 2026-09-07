@@ -1,6 +1,6 @@
 import { supabase, supabaseConfigured } from './lib/supabase.js'
 
-export const FITTOGETHER_VERSION = 'V2.0.78'
+export const FITTOGETHER_VERSION = 'V2.0.104'
 
 const fields = {
   profile: 'ft-profile', equipment: 'ft-equipment',
@@ -115,10 +115,21 @@ async function download() {
 
 let syncTimer = null
 let syncInFlight = false
+let syncQueued = false
 const safeUpload = async () => {
-  if (syncInFlight) return
+  if (syncInFlight) {
+    syncQueued = true
+    return
+  }
   syncInFlight = true
-  try { await upload() } finally { syncInFlight = false }
+  try {
+    do {
+      syncQueued = false
+      await upload()
+    } while (syncQueued)
+  } finally {
+    syncInFlight = false
+  }
 }
 
 function startAutoSync() {
@@ -129,6 +140,7 @@ function startAutoSync() {
 function stopAutoSync() {
   if (syncTimer) window.clearInterval(syncTimer)
   syncTimer = null
+  syncQueued = false
   document.removeEventListener('visibilitychange', onVisibility)
 }
 function onVisibility() {
