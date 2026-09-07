@@ -17,6 +17,32 @@ const appBridge286=()=>({
   },
 })
 
+const exerciseLibrary111=()=>({
+  name:'exercise-library-v2111',
+  enforce:'pre',
+  transform(code,id){
+    if(!id.endsWith('/src/App.jsx'))return null
+    let next=code
+    const importLine="import { isYogaExercise111, loadRepDbSupplement111, mergeExerciseSources111 } from './exerciseLibrary111.js'\n"
+    if(!next.includes('exerciseLibrary111.js'))next=importLine+next
+
+    const oldLoader="const loadExerciseDb=()=>exerciseDbPromise||(exerciseDbPromise=Promise.all(MUSCLES.map(m=>fetch(`${API_BASE}${m}.json`).then(r=>r.json()))).then(gs=>gs.flatMap(g=>g.exercises||[])))"
+    const newLoader="const loadExerciseDb=()=>exerciseDbPromise||(exerciseDbPromise=Promise.all([Promise.all(MUSCLES.map(m=>fetch(`${API_BASE}${m}.json`).then(r=>r.json()))).then(gs=>gs.flatMap(g=>g.exercises||[])),loadRepDbSupplement111()]).then(([primary,extra])=>mergeExerciseSources111(primary,extra)))"
+    if(!next.includes(oldLoader))throw new Error('V2.0.111 exercise loader target not found')
+    next=next.replace(oldLoader,newLoader)
+
+    const oldKinds="const isCardio=x=>String(x.bodyPart).toLowerCase()==='cardio'||String(x.muscle).toLowerCase()==='cardio'||['cardio','cardiovascular'].includes(String(x.category).toLowerCase())\nconst isStretch=x=>{const n=String(x.name||'').toLowerCase(),c=String(x.category||'').toLowerCase();return !isCardio(x)&&(c==='stretching'||n.includes('stretch'))}\nconst yogaNames=['sphinx','pike to cobra push up','pelvic tilt into bridge']\nconst isYoga=x=>yogaNames.includes(String(x.name||'').toLowerCase())\nconst isStrength=x=>!isCardio(x)&&!isStretch(x)&&!isYoga(x)"
+    const newKinds="const isCardio=x=>String(x.bodyPart).toLowerCase()==='cardio'||String(x.muscle).toLowerCase()==='cardio'||['cardio','cardiovascular'].includes(String(x.category).toLowerCase())\nconst isYoga=x=>isYogaExercise111(x)\nconst isStretch=x=>{const n=String(x.name||'').toLowerCase(),c=String(x.category||'').toLowerCase();return !isCardio(x)&&!isYoga(x)&&(c==='stretching'||n.includes('stretch'))}\nconst isStrength=x=>!isCardio(x)&&!isStretch(x)&&!isYoga(x)"
+    if(!next.includes(oldKinds))throw new Error('V2.0.111 exercise kind target not found')
+    next=next.replace(oldKinds,newKinds)
+
+    const cap='.slice(0,80);if(selected)return <ExerciseDetail'
+    if(!next.includes(cap))throw new Error('V2.0.111 exercise cap target not found')
+    next=next.replace(cap,';if(selected)return <ExerciseDetail')
+    return {code:next,map:null}
+  },
+})
+
 // Stable pause timer: deadline-based, isolated from parent re-renders and
 // persistent ±10 second adjustments for the current and following pauses.
 const stableRestOverlay=`function RestOverlay({seconds,onSkip,onDone}){const total=Math.max(10,Number(seconds)||90);const[left,setLeft]=useState(total);const[base,setBase]=useState(total);const[deadline,setDeadline]=useState(()=>Date.now()+total*1000);const[finish]=useState(()=>onDone);const[skip]=useState(()=>onSkip);useEffect(()=>{let fired=false;let id;const tick=()=>{const next=Math.max(0,Math.ceil((deadline-Date.now())/1000));setLeft(next);if(next<=0&&!fired){fired=true;if(id)clearInterval(id);finish?.()}};id=setInterval(tick,250);tick();return()=>{fired=true;if(id)clearInterval(id)}},[deadline,finish]);const adjust=delta=>{const nextBase=Math.max(10,Math.min(600,base+delta));const actual=nextBase-base;if(!actual)return;setBase(nextBase);setDeadline(d=>Math.max(Date.now()+1000,d+actual*1000));setLeft(v=>Math.max(1,v+actual));try{localStorage.setItem('ft-timer-default',JSON.stringify(nextBase))}catch{}};const fmt=v=>Math.floor(v/60)+':'+String(v%60).padStart(2,'0');return <div className="rest-overlay"><small>PAUSE</small><strong>{fmt(left)}</strong><span>Nächste Übung startet danach automatisch</span><div className="rest-adjust-v270"><button type="button" onClick={()=>adjust(-10)}>−10 Sek.</button><button type="button" onClick={()=>adjust(10)}>+10 Sek.</button></div><button onClick={()=>skip?.()}>Pause überspringen <ChevronRight size={18}/></button></div>}`
@@ -65,5 +91,5 @@ const workoutExperience271=()=>({
 })
 
 export default defineConfig({
-  plugins: [appBridge286(),stableRestTimer(),workoutExperience271(),trainingMemory277(),trainingResume288(),react()],
+  plugins: [appBridge286(),exerciseLibrary111(),stableRestTimer(),workoutExperience271(),trainingMemory277(),trainingResume288(),react()],
 })
