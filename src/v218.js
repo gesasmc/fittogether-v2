@@ -9,18 +9,6 @@ const yogaTerms=[
 ]
 const yogaMatch=name=>{const n=String(name||'').toLowerCase();return yogaTerms.some(t=>n.includes(t))}
 
-// App.jsx V2.0.17 uses a small allow-list for Yoga. Extend only that exact list,
-// without changing normal Array.includes behaviour elsewhere in the app.
-const nativeIncludes=Array.prototype.includes
-if(!globalThis.__ftYogaIncludesPatched){
-  Object.defineProperty(globalThis,'__ftYogaIncludesPatched',{value:true,configurable:true})
-  Array.prototype.includes=function(search,...rest){
-    const isYogaAllowList=this.length===3&&this[0]==='sphinx'&&this[1]==='pike to cobra push up'&&this[2]==='pelvic tilt into bridge'
-    if(isYogaAllowList&&typeof search==='string'&&yogaMatch(search))return true
-    return nativeIncludes.call(this,search,...rest)
-  }
-}
-
 // Re-label yoga-like records before the exercise library receives them. This keeps
 // those poses out of the normal Dehnen category while leaving Cardio/Strength intact.
 const nativeFetch=globalThis.fetch?.bind(globalThis)
