@@ -55,6 +55,5 @@ const wireSingle222=()=>{
     }})
   },true)
 }
-const updateVersion222=()=>document.querySelectorAll('body *').forEach(el=>{if(el.children.length===0&&el.textContent?.includes('V2.0.21'))el.textContent=el.textContent.replaceAll('V2.0.21','V2.0.22')})
-const enhance222=()=>{wireSingle222();updateVersion222()}
+const enhance222=()=>{wireSingle222()}
 if(typeof document!=='undefined'){const obs222=new MutationObserver(enhance222);const start222=()=>{enhance222();obs222.observe(document.body,{childList:true,subtree:true})};document.body?start222():document.addEventListener('DOMContentLoaded',start222,{once:true})}
