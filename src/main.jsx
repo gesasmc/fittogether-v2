@@ -53,7 +53,9 @@ import './v297.js'
 import './v299.js'
 import App from './App.jsx'
 import AuthGate from './AuthGate.jsx'
+import StabilityBoundary from './StabilityBoundary.jsx'
 import './styles.css'
+import './stability.css'
 import './v204.css'
 import './v205.css'
 import './v207.css'
@@ -108,5 +110,7 @@ import './v297.css'
 import './v299.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode><AuthGate><App /></AuthGate></React.StrictMode>,
+  <React.StrictMode>
+    <StabilityBoundary><AuthGate><App /></AuthGate></StabilityBoundary>
+  </React.StrictMode>,
 )
