@@ -63,11 +63,3 @@ if(!globalThis.__ftYogaIncludes219){
     return nativeIncludes219.call(this,search,...rest)
   }
 }
-
-// Show the actual iteration number until App.jsx versioning is consolidated later.
-if(typeof document!=='undefined'){
-  const updateVersion=()=>document.querySelectorAll('body *').forEach(el=>{if(el.children.length===0&&el.textContent?.includes('V2.0.18'))el.textContent=el.textContent.replaceAll('V2.0.18','V2.0.19')})
-  const obs=new MutationObserver(updateVersion)
-  const start=()=>{updateVersion();obs.observe(document.body,{childList:true,subtree:true})}
-  document.body?start():document.addEventListener('DOMContentLoaded',start,{once:true})
-}
