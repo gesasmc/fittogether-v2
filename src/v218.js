@@ -40,12 +40,3 @@ if(nativeFetch&&!globalThis.__ftCategoryFetchPatched){
     return response
   }
 }
-
-// The version constant lives in the existing screen module; update visible labels
-// without touching persisted data or application behaviour.
-if(typeof document!=='undefined'){
-  const updateVersion=()=>{document.querySelectorAll('body *').forEach(el=>{if(el.children.length===0&&el.textContent?.includes('V2.0.17'))el.textContent=el.textContent.replaceAll('V2.0.17','V2.0.18')})}
-  const observer=new MutationObserver(updateVersion)
-  const start=()=>{updateVersion();observer.observe(document.body,{childList:true,subtree:true})}
-  document.body?start():document.addEventListener('DOMContentLoaded',start,{once:true})
-}
