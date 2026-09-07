@@ -86,11 +86,6 @@ const enhance239=()=>{
   if(!grid)return
   ensureMuscleFilter239()
   loadMap239().then(apply239)
-  document.querySelectorAll('body *').forEach(el=>{
-    if(el.children.length)return
-    const t=el.textContent||''
-    if(/V2\.0\.3[5-8]/.test(t))el.textContent=t.replace(/V2\.0\.3[5-8]/g,FITTOGETHER_VERSION)
-  })
 }
 const schedule239=()=>{if(queued239)return;queued239=true;requestAnimationFrame(enhance239)}
 if(typeof document!=='undefined'){
