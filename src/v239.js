@@ -1,16 +1,6 @@
-// FitTogether V2.0.39: remove 80-item cap and add muscle filtering to the full exercise library.
-export const FITTOGETHER_VERSION='V2.0.39'
-
-const rawSlice239=Array.prototype.slice
-Array.prototype.slice=function(start,end){
-  if(start===0&&end===80&&this?.length>80){
-    const sample=this[0]
-    if(sample&&typeof sample==='object'&&('name'in sample)&&('gifUrl'in sample||'thumbUrl'in sample)){
-      return rawSlice239.call(this,0)
-    }
-  }
-  return rawSlice239.apply(this,arguments)
-}
+// FitTogether exercise muscle filter. V2.0.111 removes the old global Array.slice patch;
+// the exercise library now renders the full filtered result directly at build time.
+export const FITTOGETHER_VERSION='V2.0.111'
 
 const MUSCLES239=['abductors','abs','adductors','biceps','calves','cardio','delts','forearms','glutes','hamstrings','lats','levator-scapulae','pectorals','quads','serratus-anterior','spine','traps','triceps','upper-back']
 const API239='https://raw.githubusercontent.com/JahelCuadrado/ExerciseGymGifsDB/main/api/en/muscles/'
