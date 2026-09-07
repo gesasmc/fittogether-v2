@@ -16,7 +16,7 @@ const updateStatsCards236=()=>{
 }
 
 let scheduled236=false
-const enhance236=()=>{scheduled236=false;updateStatsCards236();document.querySelectorAll('body *').forEach(el=>{if(el.children.length)return;const t=el.textContent||'';if(t.includes('V2.0.35'))el.textContent=t.replaceAll('V2.0.35',FITTOGETHER_VERSION)})}
+const enhance236=()=>{scheduled236=false;updateStatsCards236()}
 const schedule236=()=>{if(scheduled236)return;scheduled236=true;requestAnimationFrame(enhance236)}
 if(typeof document!=='undefined'){
   const observer=new MutationObserver(m=>{if(m.some(x=>x.addedNodes.length||x.removedNodes.length))schedule236()})
