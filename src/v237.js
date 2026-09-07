@@ -45,7 +45,7 @@ const renderWeightHistory237=()=>{
   box.querySelectorAll('[data-weight-index]').forEach(btn=>btn.onclick=()=>openEditor237(Number(btn.dataset.weightIndex)))
 }
 let scheduled237=false
-const enhance237=()=>{scheduled237=false;renderWeightHistory237();document.querySelectorAll('body *').forEach(el=>{if(el.children.length)return;const t=el.textContent||'';if(t.includes('V2.0.36'))el.textContent=t.replaceAll('V2.0.36',FITTOGETHER_VERSION)})}
+const enhance237=()=>{scheduled237=false;renderWeightHistory237()}
 const schedule237=()=>{if(scheduled237)return;scheduled237=true;requestAnimationFrame(enhance237)}
 if(typeof document!=='undefined'){
   const observer=new MutationObserver(m=>{if(m.some(x=>[...x.addedNodes].some(n=>n.nodeType===1&&!n.classList?.contains('weight-entry-list-v237')&&!n.classList?.contains('weight-editor-modal-v237'))))schedule237()})
