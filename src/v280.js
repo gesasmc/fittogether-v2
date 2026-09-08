@@ -1,6 +1,6 @@
 // FitTogether V2.0.114: exercise progression history + next recommendation with targeted observer.
 const r280=(k,f)=>{try{return JSON.parse(localStorage.getItem(k))??f}catch{return f}}
-const esc280=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]))
+const esc280=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
 const norm280=s=>String(s||'').toLowerCase().replace(/[^a-z0-9äöüß]+/g,' ').trim()
 const fmt280=n=>String(Number(n)||0).replace('.',',')
 const rows280=()=>{const out=new Map();for(const w of r280('ft-completed-workouts',[])){if(!Array.isArray(w?.sets))continue;for(const s of w.sets){if(!s?.exercise||s?.rir===undefined)continue;const key=norm280(s.exercise);if(!out.has(key))out.set(key,{name:s.exercise,sessions:new Map()});const d=Number(w.date)||Date.now(),id=String(d),e=out.get(key);if(!e.sessions.has(id))e.sessions.set(id,{date:d,day:new Date(d).toLocaleDateString('de-DE'),sets:[]});e.sessions.get(id).sets.push(s)}}return[...out.values()].map(e=>({...e,sessions:[...e.sessions.values()].sort((a,b)=>a.date-b.date)})).sort((a,b)=>(b.sessions.at(-1)?.date||0)-(a.sessions.at(-1)?.date||0))}
