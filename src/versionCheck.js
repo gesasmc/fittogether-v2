@@ -1,4 +1,4 @@
-const CURRENT_VERSION='V2.0.116'
+const CURRENT_VERSION='V2.0.117'
 let checking=false
 const VERSION_SELECTOR='.brand b,.training-note,.version,.ft-auth-copy small'
 const syncVisibleVersion=(root=document)=>{const nodes=[];if(root?.nodeType===1&&root.matches?.(VERSION_SELECTOR))nodes.push(root);root?.querySelectorAll?.(VERSION_SELECTOR)?.forEach(el=>nodes.push(el));for(const el of nodes){const text=el.textContent||'';if(/V2\.0\.\d+/.test(text))el.textContent=text.replace(/V2\.0\.\d+/g,CURRENT_VERSION)}}
