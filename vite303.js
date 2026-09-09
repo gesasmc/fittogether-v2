@@ -1,7 +1,7 @@
 export default function trainingCompletion303(){
   return {
     name:'training-completion-v303',
-    enforce:'post',
+    enforce:'pre',
     transform(code,id){
       if(!id.endsWith('/src/App.jsx'))return null
       const oldComplete="const complete=()=>{const logs=readStore('ft-active-set-logs-v277',[]),old=readStore('ft-completed-workouts',[]),smart=selection?.some(x=>x?.smartRecommendation||x?.plannedSets);writeStore('ft-completed-workouts',[...old,{date:Date.now(),exercises:exercises.length,name:smart?'Smart Training':'Training',source:smart?'Smart Trainer':'Trainingsplan',kind:logs.length&&logs.every(x=>x?.kind==='cardio')?'cardio':'strength',sets:logs,version:'V2.0.122'}].slice(-100));writeStore('ft-active-set-logs-v277',[]);window.FitTogetherCloud?.upload?.();onComplete()}"
