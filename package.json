@@ -4,9 +4,9 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "vite --config vite302.config.js",
+    "build": "vite build --config vite302.config.js",
+    "preview": "vite preview --config vite302.config.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "latest",
