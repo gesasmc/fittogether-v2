@@ -1,4 +1,4 @@
-// FitTogether V2.0.131: compact accordion statistics hub for body, weight and completed trainings.
+// FitTogether V2.0.132: compact accordion statistics hub for body, weight, history and completed trainings.
 const read306=(k,f)=>{try{return JSON.parse(localStorage.getItem(k))??f}catch{return f}}
 const write306=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
 const num306=v=>{const n=Number(String(v??'').replace(',','.'));return Number.isFinite(n)?n:0}
@@ -30,6 +30,7 @@ const enhance306=()=>{
   if(!hub.querySelector('.weight-entry-v306'))hub.appendChild(weightPanel306())
   const body=stats.querySelector('.body-stats-v305');if(body&&!body.closest('.stats-accordion-v306')){const wrapped=wrapSection306(body,'BMI & Zielgewicht','KÖRPER & ZIEL','body-goal-wrap-v306');if(wrapped)hub.appendChild(wrapped)}
   const history=stats.querySelector('.weight-history');if(history&&!history.closest('.stats-accordion-v306')){const wrapped=wrapSection306(history,'Gewichtsverlauf','VERLAUF','weight-history-wrap-v306');if(wrapped)hub.appendChild(wrapped)}
+  const editableWeights=stats.querySelector('.weight-entry-list-v237');if(editableWeights&&!editableWeights.closest('.stats-accordion-v306')){const count=read306('ft-weight-history',[]).length;const wrapped=wrapSection306(editableWeights,`Gewichtseinträge${count?` · ${count}`:''}`,'BEARBEITEN','weight-edit-wrap-v306');if(wrapped)hub.appendChild(wrapped)}
   const training=stats.querySelector('.training-history-v234');if(training&&!training.closest('.stats-accordion-v306')){const count=read306('ft-completed-workouts',[]).length;const wrapped=wrapSection306(training,`Absolvierte Trainings${count?` · ${count}`:''}`,'TRAININGSVERLAUF','training-history-wrap-v306');if(wrapped)hub.appendChild(wrapped)}
   const oldButton=[...stats.querySelectorAll('.primary-action')].find(b=>/Profil.*Gewicht/i.test(b.textContent||''));if(oldButton)oldButton.style.display='none'
 }
