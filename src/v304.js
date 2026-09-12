@@ -1,6 +1,4 @@
-// FitTogether V2.0.128: compact exercise library controls without touching training logic.
-const read304=(k,f)=>{try{return JSON.parse(localStorage.getItem(k))??f}catch{return f}}
-const write304=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
+// FitTogether V2.0.130: compact exercise library controls without duplicate kind filters.
 const fire304=el=>{if(!el)return;el.dispatchEvent(new Event('change',{bubbles:true}));el.dispatchEvent(new Event('input',{bubbles:true}))}
 const visibleCards304=()=>[...document.querySelectorAll('.exercise-grid .exercise-card-v2')].filter(x=>!x.hidden&&!x.hasAttribute('data-shortcut-hide'))
 const updateCount304=()=>{const bar=document.querySelector('.exercise-library-bar-v304'),grid=document.querySelector('.exercise-grid');if(!bar||!grid)return;const total=grid.querySelectorAll('.exercise-card-v2').length,visible=visibleCards304().length;const count=bar.querySelector('[data-count304]');if(count)count.textContent=`${visible} von ${total} Übungen`}
@@ -14,11 +12,11 @@ const reset304=()=>{
   setTimeout(updateCount304,60)
 }
 const wrapEquipment304=()=>{const advanced=document.querySelector('.exercise-advanced-v238');if(!advanced||advanced.closest('.exercise-equipment-wrap-v304'))return;const wrap=document.createElement('details');wrap.className='exercise-equipment-wrap-v304';const summary=document.createElement('summary');summary.innerHTML='<span><strong>Meine Ausstattung</strong><small>Geräte & verfügbare Übungen</small></span><b>›</b>';advanced.parentNode.insertBefore(wrap,advanced);wrap.append(summary,advanced)}
-const quickFilters304=bar=>{if(bar.querySelector('.exercise-quick-v304'))return;const quick=document.createElement('div');quick.className='exercise-quick-v304';quick.innerHTML='<button type="button" data-kind="Kraft">Kraft</button><button type="button" data-kind="Cardio">Cardio</button><button type="button" data-kind="Yoga">Yoga</button><button type="button" data-kind="Dehnen">Dehnen</button>';bar.appendChild(quick);quick.querySelectorAll('button').forEach(btn=>btn.onclick=()=>{const target=[...document.querySelectorAll('.exercise-kind-tabs button')].find(x=>x.textContent.trim()===btn.dataset.kind);target?.click();setTimeout(updateCount304,50)})}
 const enhance304=()=>{
   const grid=document.querySelector('.exercise-grid'),search=document.querySelector('.search-box');if(!grid||!search)return
   document.body.classList.add('exercise-library-clean-v304')
-  let bar=document.querySelector('.exercise-library-bar-v304');if(!bar){bar=document.createElement('section');bar.className='exercise-library-bar-v304';bar.innerHTML='<div><strong>Übungen finden</strong><small data-count304>Übungen werden geladen…</small></div><button type="button" data-reset304>Zurücksetzen</button>';search.insertAdjacentElement('beforebegin',bar);bar.querySelector('[data-reset304]').onclick=reset304;quickFilters304(bar)}
+  let bar=document.querySelector('.exercise-library-bar-v304');if(!bar){bar=document.createElement('section');bar.className='exercise-library-bar-v304';bar.innerHTML='<div><strong>Übungen finden</strong><small data-count304>Übungen werden geladen…</small></div><button type="button" data-reset304>Zurücksetzen</button>';search.insertAdjacentElement('beforebegin',bar);bar.querySelector('[data-reset304]').onclick=reset304}
+  bar.querySelector('.exercise-quick-v304')?.remove()
   wrapEquipment304();updateCount304()
 }
 let q304=false
