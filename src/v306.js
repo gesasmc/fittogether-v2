@@ -1,4 +1,4 @@
-// FitTogether V2.0.130: compact accordion statistics hub for body data and weight.
+// FitTogether V2.0.131: compact accordion statistics hub for body, weight and completed trainings.
 const read306=(k,f)=>{try{return JSON.parse(localStorage.getItem(k))??f}catch{return f}}
 const write306=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
 const num306=v=>{const n=Number(String(v??'').replace(',','.'));return Number.isFinite(n)?n:0}
@@ -17,9 +17,9 @@ const weightPanel306=()=>{
   d.querySelector('[data-add306]').onclick=()=>{const n=num306(d.querySelector('[data-weight306]').value);if(n<30||n>300)return;const history=read306('ft-weight-history',[]);write306('ft-weight-history',[...history,{date:Date.now(),weight:n}].slice(-100));window.FitTogetherCloud?.upload?.();rerender306()}
   return d
 }
-const wrapSection306=(node,title,kicker)=>{
+const wrapSection306=(node,title,kicker,extraClass='')=>{
   if(!node||node.closest('.stats-accordion-v306'))return null
-  const d=document.createElement('details');d.className='stats-accordion-v306';d.innerHTML=`<summary><span><small>${kicker}</small><strong>${title}</strong></span><b>›</b></summary><div class="stats-accordion-body-v306"></div>`
+  const d=document.createElement('details');d.className=`stats-accordion-v306 ${extraClass}`.trim();d.innerHTML=`<summary><span><small>${kicker}</small><strong>${title}</strong></span><b>›</b></summary><div class="stats-accordion-body-v306"></div>`
   node.parentNode.insertBefore(d,node);d.querySelector('.stats-accordion-body-v306').appendChild(node);return d
 }
 const enhance306=()=>{
@@ -28,8 +28,9 @@ const enhance306=()=>{
   if(!hub)return
   if(!hub.querySelector('.body-data-v306'))hub.appendChild(bodyPanel306())
   if(!hub.querySelector('.weight-entry-v306'))hub.appendChild(weightPanel306())
-  const body=stats.querySelector('.body-stats-v305');if(body&&!body.closest('.stats-accordion-v306')){const wrapped=wrapSection306(body,'BMI & Zielgewicht','KÖRPER & ZIEL');if(wrapped)hub.appendChild(wrapped)}
-  const history=stats.querySelector('.weight-history');if(history&&!history.closest('.stats-accordion-v306')){const wrapped=wrapSection306(history,'Gewichtsverlauf','VERLAUF');if(wrapped)hub.appendChild(wrapped)}
+  const body=stats.querySelector('.body-stats-v305');if(body&&!body.closest('.stats-accordion-v306')){const wrapped=wrapSection306(body,'BMI & Zielgewicht','KÖRPER & ZIEL','body-goal-wrap-v306');if(wrapped)hub.appendChild(wrapped)}
+  const history=stats.querySelector('.weight-history');if(history&&!history.closest('.stats-accordion-v306')){const wrapped=wrapSection306(history,'Gewichtsverlauf','VERLAUF','weight-history-wrap-v306');if(wrapped)hub.appendChild(wrapped)}
+  const training=stats.querySelector('.training-history-v234');if(training&&!training.closest('.stats-accordion-v306')){const count=read306('ft-completed-workouts',[]).length;const wrapped=wrapSection306(training,`Absolvierte Trainings${count?` · ${count}`:''}`,'TRAININGSVERLAUF','training-history-wrap-v306');if(wrapped)hub.appendChild(wrapped)}
   const oldButton=[...stats.querySelectorAll('.primary-action')].find(b=>/Profil.*Gewicht/i.test(b.textContent||''));if(oldButton)oldButton.style.display='none'
 }
 let q306=false
