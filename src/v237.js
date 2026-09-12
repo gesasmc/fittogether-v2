@@ -1,5 +1,5 @@
-// FitTogether V2.0.37: editable/deletable weight history in statistics.
-export const FITTOGETHER_VERSION='V2.0.37'
+// FitTogether V2.0.133: editable/deletable weight history with compact edit controls.
+export const FITTOGETHER_VERSION='V2.0.133'
 const KEY237='ft-weight-history'
 const read237=(k,f)=>{try{return JSON.parse(localStorage.getItem(k)??JSON.stringify(f))}catch{return f}}
 const write237=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
@@ -41,7 +41,7 @@ const renderWeightHistory237=()=>{
   if(!box){box=document.createElement('section');box.className='weight-entry-list-v237';const chart=stats.querySelector('.weight-chart-v235');if(chart)chart.insertAdjacentElement('afterend',box);else stats.appendChild(box)}
   const rows=read237(KEY237,[])
   const signature=JSON.stringify(rows);if(box.dataset.signature===signature)return;box.dataset.signature=signature
-  box.innerHTML=`<div class="section-title"><span>Gewichtseinträge</span></div>${rows.length?`<div class="weight-rows-v237">${rows.map((x,i)=>`<button type="button" data-weight-index="${i}"><span><strong>${esc237(x.weight)} kg</strong><small>${new Date(Number(x.date)||Date.now()).toLocaleDateString('de-DE')}</small></span><b>Bearbeiten</b></button>`).reverse().join('')}</div>`:'<p class="weight-empty-v237">Noch keine Gewichtseinträge vorhanden.</p>'}`
+  box.innerHTML=`${rows.length?`<div class="weight-rows-v237">${rows.map((x,i)=>`<button type="button" data-weight-index="${i}" aria-label="${esc237(x.weight)} kg bearbeiten"><span><strong>${esc237(x.weight)} kg</strong><small>${new Date(Number(x.date)||Date.now()).toLocaleDateString('de-DE')}</small></span><b class="weight-edit-icon-v237" aria-hidden="true">✎</b></button>`).reverse().join('')}</div>`:'<p class="weight-empty-v237">Noch keine Gewichtseinträge vorhanden.</p>'}`
   box.querySelectorAll('[data-weight-index]').forEach(btn=>btn.onclick=()=>openEditor237(Number(btn.dataset.weightIndex)))
 }
 let scheduled237=false
