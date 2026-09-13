@@ -1,15 +1,15 @@
 /
   Cache-Control: no-store, no-cache, must-revalidate, max-age=0
-  X-FitTogether-Version: V2.0.146
+  X-FitTogether-Version: V2.0.147
 
 /index.html
   Cache-Control: no-store, no-cache, must-revalidate, max-age=0
-  X-FitTogether-Version: V2.0.146
+  X-FitTogether-Version: V2.0.147
 
 /version.json
   Cache-Control: no-store, no-cache, must-revalidate, max-age=0
   Clear-Site-Data: "cache"
-  X-FitTogether-Version: V2.0.146
+  X-FitTogether-Version: V2.0.147
 
 /manifest.webmanifest
   Cache-Control: no-cache, must-revalidate, max-age=0
