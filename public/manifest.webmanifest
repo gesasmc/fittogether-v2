@@ -2,7 +2,7 @@
   "name": "FitTogether V2",
   "short_name": "FitTogether",
   "description": "FitTogether – Training, Fortschritt und smarte Planung.",
-  "start_url": "/",
+  "start_url": "/?ftv=V2.0.144",
   "scope": "/",
   "display": "standalone",
   "background_color": "#070b0d",
