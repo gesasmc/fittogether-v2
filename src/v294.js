@@ -1,6 +1,6 @@
 // FitTogether V2.0.124: post-workout summary for strength and cardio.
 const read294=(k,f)=>{try{return JSON.parse(localStorage.getItem(k))??f}catch{return f}}
-const esc294=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]))
+const esc294=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
 const num294=v=>{const n=Number(v);return Number.isFinite(n)?n:0}
 const rir294=v=>String(v??'').replace('+','')
 const latest294=()=>{const a=read294('ft-completed-workouts',[]);return a.length?a[a.length-1]:null}
