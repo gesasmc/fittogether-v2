@@ -121,6 +121,7 @@ import './v308.css'
 import './v309.css'
 import './v310.css'
 import './v311.css'
+import './v312.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
