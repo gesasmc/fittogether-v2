@@ -1,4 +1,4 @@
-const VERSION='V2.0.149'
+const VERSION='V2.0.150'
 
 const noStorePaths=new Set(['/', '/index.html', '/version.json', '/manifest.webmanifest', '/ft-reminder-sw.js'])
 
