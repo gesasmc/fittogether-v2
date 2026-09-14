@@ -65,6 +65,7 @@ import './v321.js'
 import './v322.js'
 import './v323.js'
 import './v324.js'
+import './v327.js'
 import App from './App.jsx'
 import AuthGate from './AuthGate.jsx'
 import StabilityBoundary from './StabilityBoundary.jsx'
@@ -145,6 +146,7 @@ import './v322.css'
 import './v323.css'
 import './v324.css'
 import './v326.css'
+import './v327.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
