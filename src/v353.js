@@ -1,6 +1,7 @@
 // FitTogether V2.0.353: exact per-day equipment requirements for Smart Trainer plans.
 // Existing V2.0.352 plans are revalidated and rebuilt. Database labels such as
 // "body weight" are not trusted when the movement actually requires equipment.
+// Plans deliberately edited by the user in V2.0.355 are preserved as-is.
 const r353=(k,f)=>{try{return JSON.parse(localStorage.getItem(k))??f}catch{return f}}
 const w353=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
 const VERSION353='V2.0.353'
@@ -95,7 +96,7 @@ const syncPurge353=()=>{
   const plans=r353('ft-plans',[]);if(!Array.isArray(plans)||!plans.length)return false
   let changed=false
   const next=plans.map(p=>{
-    if(!smart353(p)||!Array.isArray(p.sessions))return p
+    if(!smart353(p)||!Array.isArray(p.sessions)||p.manualEditsV355===true)return p
     const sessions=p.sessions.map(s=>cleanSync353(s,p))
     if(JSON.stringify(sessions)!==JSON.stringify(p.sessions)||p.strictEquipmentVersion!==VERSION353){changed=true;return{...p,sessions,strictEquipmentV352:undefined,strictEquipmentVersion:VERSION353,version:VERSION353}}
     return p
@@ -135,7 +136,7 @@ const rebuildAll353=async()=>{
   const items=await loadDb353();if(!items.length)return false
   let changed=false
   const next=plans.map((plan,pi)=>{
-    if(!smart353(plan)||!Array.isArray(plan.sessions))return plan
+    if(!smart353(plan)||!Array.isArray(plan.sessions)||plan.manualEditsV355===true)return plan
     const sessions=plan.sessions.map((s,si)=>{
       if(!s||typeof s==='string'||!Array.isArray(s.equipment)||!s.equipment.length)return s
       if(sessionType353(s)==='Cardio')return cleanSync353(s,plan)
