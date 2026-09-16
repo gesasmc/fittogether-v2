@@ -1,9 +1,28 @@
 // FitTogether V2.0.351: reliable Smart Trainer takeover using the live central equipment selection.
 const r351=(k,f)=>{try{return JSON.parse(localStorage.getItem(k))??f}catch{return f}}
 const w351=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
-const esc351=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
+const esc351=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]))
 const WEEK351=['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag']
-const profile351=()=>r351('ft-available-equipment-v238',null)??r351('ft-equipment-profile',{})?.equipment??{}
+const profile351=()=>{
+  const central=r351('ft-equipment-profile',null)?.equipment||{}
+  const legacy=r351('ft-available-equipment-v238',null)||{}
+  const quick=r351('ft-quickstart-settings-v271',null)?.equipment||{}
+  const pick=(key,aliases=[],fallback=false)=>{for(const src of [central,legacy,quick])for(const k of [key,...aliases])if(typeof src?.[k]==='boolean')return src[k];return fallback}
+  const equipment={
+    bodyweight:pick('bodyweight',[],true),
+    dumbbell:pick('dumbbell'),
+    barbell:pick('barbell'),
+    band:pick('band'),
+    machine:pick('machine',['cable']),
+    bike:pick('bike',['indoorBike','ergometer','exerciseBike','stationaryBike']),
+    rower:pick('rower',['rowingMachine','rowing']),
+    treadmill:pick('treadmill'),
+  }
+  const profile=r351('ft-equipment-profile',{})||{}
+  w351('ft-equipment-profile',{...profile,equipment:{...central,...equipment}})
+  w351('ft-available-equipment-v238',{...legacy,...equipment})
+  return equipment
+}
 const strengthDefs351=p=>[
   ['bodyweight','Körpergewicht',!!p.bodyweight],
   ['dumbbell','Kurzhantel',!!p.dumbbell],
@@ -12,8 +31,8 @@ const strengthDefs351=p=>[
   ['machine','Kabel/Maschine',!!p.machine],
 ].filter(x=>x[2])
 const cardioDefs351=p=>[
-  ['bike','Indoor-Bike',!!(p.bike??p.indoorBike??p.ergometer)],
-  ['rower','Rudergerät',!!(p.rower??p.rowingMachine??p.rowing)],
+  ['bike','Indoor-Bike',!!p.bike],
+  ['rower','Rudergerät',!!p.rower],
   ['treadmill','Laufband',!!p.treadmill],
 ].filter(x=>x[2])
 const defaults351=()=>Object.fromEntries(WEEK351.map((d,i)=>[d,{type:i===0||i===2||i===4?'Kraft':'Frei',equipment:[]}]))
