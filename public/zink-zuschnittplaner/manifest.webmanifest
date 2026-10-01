@@ -1,0 +1,9 @@
+{
+  "name": "Zink Zuschnittplaner",
+  "short_name": "ZinkPlan",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0f1113",
+  "theme_color": "#111315",
+  "description": "Zuschnitte aus Zinktafeln planen, Plattenbedarf berechnen und Schnittbilder anzeigen."
+}
