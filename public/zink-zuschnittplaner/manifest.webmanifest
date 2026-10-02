@@ -10,13 +10,7 @@
   "description": "Zuschnitte aus Zinktafeln planen, Plattenbedarf berechnen und Schnittbilder anzeigen.",
   "icons": [
     {
-      "src": "/zink-zuschnittplaner/zinkplan-apple-rgb-v26.png",
-      "sizes": "180x180",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/zink-zuschnittplaner/zinkplan-icon-192-v23.png",
+      "src": "/zink-zuschnittplaner/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
