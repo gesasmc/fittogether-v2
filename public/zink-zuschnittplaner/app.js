@@ -10,6 +10,9 @@ const rotateEl = document.getElementById('rotate');
 const cutCountEl = document.getElementById('cutCount');
 const toastEl = document.getElementById('toast');
 let nextId = 1;
+let doneParts = new Set(storageGet('zinkDoneParts', []));
+function doneKey(si, pi, p){ return [si,pi,p.name,p.origL,p.origW].join('|'); }
+function saveDone(){ storageSet('zinkDoneParts',[...doneParts]); }
 
 function storageGet(key, fallback) {
   try {
@@ -272,9 +275,12 @@ function render() {
 
     s.placed.forEach((p,pi)=>{
       const x=(p.x+m)*sx,y=(p.y+m)*sy,w=p.w*sx,h=p.h*sy;
-      svg+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${color(p.ci)}" fill-opacity=".78" stroke="#111" stroke-width="2"/>
+      const key=doneKey(si,pi,p), done=doneParts.has(key);
+      svg+=`<g class="part-hit ${done?'done-part':''}" data-done-key="${esc(key)}">
+      <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${color(p.ci)}" fill-opacity=".78" stroke="#111" stroke-width="2"/>
+      <circle class="part-check ${done?'done':''}" cx="${x+14}" cy="${y+14}" r="10"/><text x="${x+14}" y="${y+19}" text-anchor="middle" fill="#fff" font-size="14" font-weight="900">${done?'✓':''}</text>
       <text x="${x+w/2}" y="${y+h/2-5}" text-anchor="middle" fill="#101214" font-size="${Math.max(10,Math.min(20,w/8))}" font-weight="700">${pi+1}. ${esc(p.name)}</text>
-      <text x="${x+w/2}" y="${y+h/2+15}" text-anchor="middle" fill="#101214" font-size="${Math.max(9,Math.min(16,w/10))}">${p.origL}×${p.origW}${p.rot?' ↻':''}</text>`;
+      <text x="${x+w/2}" y="${y+h/2+15}" text-anchor="middle" fill="#101214" font-size="${Math.max(9,Math.min(16,w/10))}">${p.origL}×${p.origW}${p.rot?' ↻':''}</text></g>`;
     });
     svg+='</svg>';
     const used=s.placed.reduce((a,p)=>a+p.w*p.h,0);
@@ -283,6 +289,12 @@ function render() {
     html+=`<div class="sheet"><div class="sheethead"><b>Platte ${si+1} · ${L} × ${W} mm</b><span>${s.placed.length} Teile · ${(used/sheetArea*100).toFixed(1)} % belegt</span></div>${svg}${cutList}${restText}</div>`;
   });
   results.innerHTML=html;
+  results.querySelectorAll('[data-done-key]').forEach(el=>el.addEventListener('click',()=>{
+    const key=el.dataset.doneKey;
+    if(doneParts.has(key)) doneParts.delete(key); else doneParts.add(key);
+    saveDone();
+    render();
+  }));
   results.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
@@ -301,6 +313,7 @@ document.getElementById('demo').addEventListener('click',()=>{
   render();
 });
 document.getElementById('clear').addEventListener('click',()=>{
+  doneParts.clear(); saveDone();
   cutsEl.innerHTML='';
   addCut();
   results.innerHTML='<h2>Ergebnis</h2><div class="sub">Noch keine Berechnung.</div>';
