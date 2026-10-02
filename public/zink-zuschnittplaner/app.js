@@ -8,7 +8,7 @@ const marginEl = document.getElementById('margin');
 const gapEl = document.getElementById('gap');
 const rotateEl = document.getElementById('rotate');
 const cutCountEl = document.getElementById('cutCount');
-const toastEl = document.getElementById('toast');
+const toastEl = document.getElementById('toast');\nconst jobNameEl = document.getElementById('jobName');
 let nextId = 1;
 let doneParts = new Set(storageGet('zinkDoneParts', []));
 function doneKey(si, pi, p){ return [si,pi,p.name,p.origL,p.origW].join('|'); }
@@ -111,7 +111,7 @@ function load() {
   if (s.w) sheetW.value = s.w;
   if (s.margin != null) marginEl.value = s.margin;
   if (s.gap != null) gapEl.value = s.gap;
-  if (s.rotate != null) rotateEl.checked = !!s.rotate;
+  if (s.rotate != null) rotateEl.checked = !!s.rotate;\n  if (s.jobName != null) jobNameEl.value = s.jobName;
 
   const c = storageGet('zinkCuts', []);
   if (Array.isArray(c) && c.length) c.forEach(v => addCut(v));
@@ -254,7 +254,7 @@ function render() {
   const sheetArea=L*W, totalSheetArea=res.sheets.length*sheetArea;
   const waste=totalSheetArea-totalArea, util=totalArea/totalSheetArea*100;
 
-  let html=`<h2>Ergebnis</h2><div class="stats">
+  const jobTitle=jobNameEl.value.trim();\n  let html=`<h2>Ergebnis</h2>${jobTitle?`<div style="font-size:17px;font-weight:800;color:var(--accent);margin:-5px 0 12px">${esc(jobTitle)}</div>`:''}<div class="stats">
     <div class="stat"><b>${res.sheets.length}</b><span>Platten benötigt</span></div>
     <div class="stat"><b>${(totalArea/1e6).toFixed(2)} m²</b><span>Zuschnittfläche</span></div>
     <div class="stat"><b>${(waste/1e6).toFixed(2)} m²</b><span>Rest/Verschnitt</span></div>
@@ -283,13 +283,13 @@ function render() {
       <text x="${x+w/2}" y="${y+h/2+15}" text-anchor="middle" fill="#101214" font-size="${Math.max(9,Math.min(16,w/10))}">${p.origL}×${p.origW}${p.rot?' ↻':''}</text></g>`;
     });
     svg+='</svg>';
-    const used=s.placed.reduce((a,p)=>a+p.w*p.h,0);
+    const used=s.placed.reduce((a,p)=>a+p.w*p.h,0);\n    const doneCount=s.placed.filter((p,i)=>doneParts.has(doneKey(si,i,p))).length;
     const cutList=`<div class="legend"><b>Teile:</b> ${s.placed.map((p,i)=>`${i+1}. ${esc(p.name)} ${p.origL}×${p.origW}${p.rot?' (gedreht)':''}`).join(' · ')}</div>`;
-    const restText=rests.length?`<div class="legend"><b>Brauchbare Reste:</b> ${rests.map(r=>`${Math.round(r.w)} × ${Math.round(r.h)} mm`).join(' · ')}</div>`:'';
-    html+=`<div class="sheet"><div class="sheethead"><b>Platte ${si+1} · ${L} × ${W} mm</b><span>${s.placed.length} Teile · ${(used/sheetArea*100).toFixed(1)} % belegt</span></div>${svg}${cutList}${restText}</div>`;
+    const resetDone=`<div style="margin-top:10px"><button type="button" class="secondary reset-done" data-sheet="${si}">Haken dieser Platte zurücksetzen</button></div>`;\n    const restText=rests.length?`<div class="legend"><b>Brauchbare Reste:</b> ${rests.map(r=>`${Math.round(r.w)} × ${Math.round(r.h)} mm`).join(' · ')}</div>`:'';
+    html+=`<div class="sheet"><div class="sheethead"><b>Platte ${si+1} · ${L} × ${W} mm</b><span>${doneCount}/${s.placed.length} fertig ✓ · ${(used/sheetArea*100).toFixed(1)} % belegt</span></div>${svg}${cutList}${restText}${doneCount?resetDone:''}</div>`;
   });
   results.innerHTML=html;
-  results.querySelectorAll('[data-done-key]').forEach(el=>el.addEventListener('click',()=>{
+  results.querySelectorAll('.reset-done').forEach(btn=>btn.addEventListener('click',()=>{\n    const si=+btn.dataset.sheet;\n    [...doneParts].filter(k=>k.startsWith(si+'|')).forEach(k=>doneParts.delete(k));\n    saveDone(); render(); showToast('Haken zurückgesetzt');\n  }));\n  results.querySelectorAll('[data-done-key]').forEach(el=>el.addEventListener('click',()=>{
     const key=el.dataset.doneKey;
     if(doneParts.has(key)) doneParts.delete(key); else doneParts.add(key);
     saveDone();
@@ -320,7 +320,7 @@ document.getElementById('clear').addEventListener('click',()=>{
   save();
   showToast('Zurückgesetzt');
 });
-[sheetL,sheetW,marginEl,gapEl,rotateEl].forEach(el=>{
+[sheetL,sheetW,marginEl,gapEl,rotateEl,jobNameEl].forEach(el=>{
   el.addEventListener('input',save);
   el.addEventListener('change',save);
 });
