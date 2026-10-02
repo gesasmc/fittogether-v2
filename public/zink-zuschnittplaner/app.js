@@ -11,6 +11,8 @@ const cutCountEl = document.getElementById('cutCount');
 const toastEl = document.getElementById('toast');
 const jobNameEl = document.getElementById('jobName');
 const savedJobsEl = document.getElementById('savedJobs');
+const jobsPageEl = document.getElementById('jobsPage');
+const mainSections = [...document.querySelectorAll('main > section:not(#jobsPage)')];
 let activeJobId = null;
 let nextId = 1;
 let doneParts = new Set(storageGet('zinkDoneParts', []));
@@ -122,7 +124,7 @@ function jobSnapshot(){
 function renderSavedJobs(){
   const jobs=storageGet('zinkJobs',[]);
   if(!jobs.length){ savedJobsEl.innerHTML='<div class="sub">Noch keine Baustellen gespeichert.</div>'; return; }
-  savedJobsEl.innerHTML='<label>Gespeicherte Baustellen</label>'+jobs.sort((a,b)=>b.updated-a.updated).map(x=>`<div class="row" style="padding:8px 0;border-top:1px solid var(--line)"><button type="button" class="secondary open-job grow" data-id="${esc(x.id)}" style="text-align:left">${esc(x.name||'Unbenannte Baustelle')}</button><button type="button" class="danger delete-job" data-id="${esc(x.id)}">×</button></div>`).join('');
+  savedJobsEl.innerHTML=jobs.sort((a,b)=>b.updated-a.updated).map(x=>{const d=new Date(x.updated);const date=d.toLocaleDateString('de-DE')+' · '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});return `<div style="padding:12px 0;border-top:1px solid var(--line)"><div class="row"><button type="button" class="secondary open-job grow" data-id="${esc(x.id)}" style="text-align:left"><b>${esc(x.name||'Unbenannte Baustelle')}</b><span style="display:block;color:var(--muted);font-size:11px;margin-top:3px">${date}</span></button><button type="button" class="danger delete-job" data-id="${esc(x.id)}">×</button></div></div>`;}).join('');
   savedJobsEl.querySelectorAll('.open-job').forEach(b=>b.addEventListener('click',()=>openJob(b.dataset.id)));
   savedJobsEl.querySelectorAll('.delete-job').forEach(b=>b.addEventListener('click',()=>deleteJob(b.dataset.id)));
 }
@@ -138,12 +140,14 @@ function openJob(id){
   activeJobId=job.id; jobNameEl.value=job.name||'';
   sheetL.value=job.settings?.l||2000; sheetW.value=job.settings?.w||1000; marginEl.value=job.settings?.margin||0; gapEl.value=job.settings?.gap||0; rotateEl.checked=job.settings?.rotate!==false;
   doneParts=new Set(job.done||[]); saveDone(); cutsEl.innerHTML=''; (job.cuts?.length?job.cuts:[{}]).forEach(v=>addCut(v));
-  save(); render(); showToast('Baustelle geöffnet');
+  save(); showMain(); render(); showToast('Baustelle geöffnet');
 }
 function deleteJob(id){
   storageSet('zinkJobs',storageGet('zinkJobs',[]).filter(x=>x.id!==id));
   if(activeJobId===id) activeJobId=null; renderSavedJobs(); showToast('Baustelle gelöscht');
 }
+function showJobs(){ mainSections.forEach(x=>x.style.display='none'); jobsPageEl.style.display='block'; renderSavedJobs(); window.scrollTo({top:0,behavior:'smooth'}); }
+function showMain(){ jobsPageEl.style.display='none'; mainSections.forEach(x=>x.style.display='block'); window.scrollTo({top:0,behavior:'smooth'}); }
 function newJob(){
   activeJobId=null; jobNameEl.value=''; sheetL.value=2000; sheetW.value=1000; marginEl.value=0; gapEl.value=0; rotateEl.checked=true;
   doneParts.clear(); saveDone(); cutsEl.innerHTML=''; addCut();
@@ -360,15 +364,8 @@ document.getElementById('add').addEventListener('click',()=>{
   showToast('Neues Teil hinzugefügt');
 });
 document.getElementById('calc').addEventListener('click',render);
-document.getElementById('demo').addEventListener('click',()=>{
-  cutsEl.innerHTML='';
-  [
-    {name:'Ortgang',l:2000,w:330,mode:'m',q:5.5},
-    {name:'Traufe',l:1000,w:250,mode:'qty',q:3},
-    {name:'Abdeckung',l:800,w:180,mode:'qty',q:4}
-  ].forEach(v=>addCut(v));
-  render();
-});
+document.getElementById('jobs').addEventListener('click',showJobs);
+document.getElementById('closeJobs').addEventListener('click',showMain);
 document.getElementById('clear').addEventListener('click',()=>{
   doneParts.clear(); saveDone();
   cutsEl.innerHTML='';
