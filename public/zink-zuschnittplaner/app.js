@@ -116,20 +116,28 @@ function load() {
 }
 
 function pack(items, W, H, gap, allowRotate) {
-  const sheets = [];
-  const newSheet = () => ({ free: [{ x: 0, y: 0, w: W, h: H }], placed: [] });
-  const fits = (rect, item) => item.w <= rect.w && item.h <= rect.h;
-  const score = (rect, item) => Math.min(rect.w - item.w, rect.h - item.h) * 100000 + (rect.w * rect.h - item.w * item.h);
+  const makeSheet = () => ({ free: [{ x: 0, y: 0, w: W, h: H }], placed: [] });
 
-  function placeIn(sheet, item) {
+  function prune(rects) {
+    return rects
+      .filter(r => r.w > 0 && r.h > 0)
+      .filter((a, i, arr) => !arr.some((b, j) => i !== j &&
+        a.x >= b.x && a.y >= b.y &&
+        a.x + a.w <= b.x + b.w &&
+        a.y + a.h <= b.y + b.h));
+  }
+
+  function tryPlace(sheet, item) {
     let best = null;
     sheet.free.forEach((r, ri) => {
       const opts = [{ w: item.w, h: item.h, rot: false }];
       if (allowRotate && item.w !== item.h) opts.push({ w: item.h, h: item.w, rot: true });
       opts.forEach(o => {
-        if (fits(r, o)) {
-          const sc = score(r, o);
-          if (!best || sc < best.sc) best = { r, ri, ...o, sc };
+        if (o.w <= r.w && o.h <= r.h) {
+          const shortSide = Math.min(r.w - o.w, r.h - o.h);
+          const areaWaste = r.w * r.h - o.w * o.h;
+          const score = shortSide * 1e9 + areaWaste;
+          if (!best || score < best.score) best = { r, ri, ...o, score };
         }
       });
     });
@@ -139,147 +147,63 @@ function pack(items, W, H, gap, allowRotate) {
     sheet.free.splice(ri, 1);
     sheet.placed.push({ ...item, x: r.x, y: r.y, w, h, rot });
 
-    const rw = r.w - w - gap;
-    const bh = r.h - h - gap;
-    if (rw > 0) sheet.free.push({ x: r.x + w + gap, y: r.y, w: rw, h });
-    if (bh > 0) sheet.free.push({ x: r.x, y: r.y + h + gap, w: r.w, h: bh });
+    const rightW = r.w - w - gap;
+    const bottomH = r.h - h - gap;
 
-    sheet.free = sheet.free.filter((a, i, arr) => !arr.some((b, j) => i !== j && a.x >= b.x && a.y >= b.y && a.x + a.w <= b.x + b.w && a.y + a.h <= b.y + b.h));
+    // Two guillotine-style split variants; choose the one that leaves the larger useful rectangle.
+    const splitA = [];
+    if (rightW > 0) splitA.push({ x: r.x + w + gap, y: r.y, w: rightW, h: r.h });
+    if (bottomH > 0) splitA.push({ x: r.x, y: r.y + h + gap, w: w, h: bottomH });
+
+    const splitB = [];
+    if (rightW > 0) splitB.push({ x: r.x + w + gap, y: r.y, w: rightW, h: h });
+    if (bottomH > 0) splitB.push({ x: r.x, y: r.y + h + gap, w: r.w, h: bottomH });
+
+    const quality = rs => Math.max(0, ...rs.map(x => x.w * x.h));
+    sheet.free.push(...(quality(splitA) >= quality(splitB) ? splitA : splitB));
+    sheet.free = prune(sheet.free);
     return true;
   }
 
-  items.sort((a, b) => Math.max(b.w, b.h) - Math.max(a.w, a.h) || b.w * b.h - a.w * a.h);
-  for (const item of items) {
-    let done = false;
-    for (const s of sheets) {
-      if (placeIn(s, item)) { done = true; break; }
-    }
-    if (!done) {
-      const s = newSheet();
-      if (!placeIn(s, item)) return { error: item };
-      sheets.push(s);
-    }
-  }
-  return { sheets };
-}
-
-function color(i) {
-  const colors = ['#f4bd31','#5cc8ff','#ff7a8a','#80df9a','#c792ea','#ffad5a','#7fd1c8','#9da7ff'];
-  return colors[i % colors.length];
-}
-
-function render() {
-  save();
-  const L = +sheetL.value;
-  const W = +sheetW.value;
-  const m = +marginEl.value;
-  const g = +gapEl.value;
-  const rot = rotateEl.checked;
-  const cuts = readCuts(false);
-
-  if (!L || !W || cuts.length === 0) {
-    results.innerHTML = '<h2>Ergebnis</h2><div class="error">Bitte Plattengröße und mindestens einen gültigen Zuschnitt eingeben.</div>';
-    return;
-  }
-
-  const usableL = L - 2 * m;
-  const usableW = W - 2 * m;
-  if (usableL <= 0 || usableW <= 0) {
-    results.innerHTML = '<h2>Ergebnis</h2><div class="error">Randabstand ist zu groß.</div>';
-    return;
-  }
-
-  const items = [];
-  cuts.forEach((c, ci) => {
-    if (c.mode === 'm') {
-      let remaining = Math.round(c.q * 1000);
-      while (remaining > 0) {
-        const partL = Math.min(c.l, remaining);
-        items.push({ name: c.name, w: partL, h: c.w, ci, origL: partL, origW: c.w });
-        remaining -= partL;
+  function run(order) {
+    const sheets = [];
+    for (const item of order) {
+      let placed = false;
+      for (const sheet of sheets) {
+        if (tryPlace(sheet, item)) { placed = true; break; }
       }
-    } else {
-      for (let k = 0; k < Math.ceil(c.q); k++) {
-        items.push({ name: c.name, w: c.l, h: c.w, ci, origL: c.l, origW: c.w });
+      if (!placed) {
+        const sheet = makeSheet();
+        if (!tryPlace(sheet, item)) return { error: item };
+        sheets.push(sheet);
       }
     }
-  });
-
-  const res = pack(items, usableL, usableW, g, rot);
-  if (res.error) {
-    results.innerHTML = `<h2>Ergebnis</h2><div class="error">${esc(res.error.name)} (${res.error.origL} × ${res.error.origW} mm) passt auf keine Platte.</div>`;
-    results.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    return;
+    return { sheets };
   }
 
-  const totalArea = items.reduce((s, i) => s + i.w * i.h, 0);
-  const sheetArea = L * W;
-  const totalSheetArea = res.sheets.length * sheetArea;
-  const waste = totalSheetArea - totalArea;
-  const util = totalArea / totalSheetArea * 100;
+  // Try several sensible orders and keep the solution with the fewest sheets,
+  // then the most compact last sheet.
+  const orders = [
+    [...items].sort((a,b) => b.w*b.h - a.w*a.h),
+    [...items].sort((a,b) => Math.max(b.w,b.h)-Math.max(a.w,a.h) || b.w*b.h-a.w*a.h),
+    [...items].sort((a,b) => b.h-a.h || b.w-a.w),
+    [...items].sort((a,b) => b.w-a.w || b.h-a.h)
+  ];
+  const candidates = orders.map(run);
+  const valid = candidates.filter(x => !x.error);
+  if (!valid.length) return candidates[0];
 
-  let html = `<h2>Ergebnis</h2><div class="stats">
-    <div class="stat"><b>${res.sheets.length}</b><span>Platten benötigt</span></div>
-    <div class="stat"><b>${(totalArea / 1e6).toFixed(2)} m²</b><span>Zuschnittfläche</span></div>
-    <div class="stat"><b>${(waste / 1e6).toFixed(2)} m²</b><span>Rest/Verschnitt*</span></div>
-    <div class="stat"><b>${util.toFixed(1)} %</b><span>Flächennutzung</span></div>
-  </div><div class="legend">* Restfläche ist rechnerisch; brauchbare Reststücke werden noch nicht separat bewertet.</div>`;
-
-  res.sheets.forEach((s, si) => {
-    const vw = 900;
-    const vh = Math.max(280, Math.round(vw * W / L));
-    const sx = vw / L;
-    const sy = vh / W;
-    let svg = `<svg viewBox="0 0 ${vw} ${vh}" role="img" aria-label="Schnittplan Platte ${si + 1}"><rect x="0" y="0" width="${vw}" height="${vh}" fill="#0d0f11" stroke="#70777f" stroke-width="2"/>`;
-    if (m > 0) svg += `<rect x="${m * sx}" y="${m * sy}" width="${usableL * sx}" height="${usableW * sy}" fill="none" stroke="#727982" stroke-dasharray="8 6"/>`;
-
-    s.placed.forEach(p => {
-      const x = (p.x + m) * sx;
-      const y = (p.y + m) * sy;
-      const w = p.w * sx;
-      const h = p.h * sy;
-      svg += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${color(p.ci)}" fill-opacity=".78" stroke="#111" stroke-width="2"/>
-        <text x="${x + w / 2}" y="${y + h / 2 - 5}" text-anchor="middle" fill="#101214" font-size="${Math.max(10, Math.min(20, w / 8))}" font-weight="700">${esc(p.name)}</text>
-        <text x="${x + w / 2}" y="${y + h / 2 + 15}" text-anchor="middle" fill="#101214" font-size="${Math.max(9, Math.min(16, w / 10))}">${p.origL}×${p.origW}${p.rot ? ' ↻' : ''}</text>`;
-    });
-    svg += '</svg>';
-    const used = s.placed.reduce((a, p) => a + p.w * p.h, 0);
-    html += `<div class="sheet"><div class="sheethead"><b>Platte ${si + 1} · ${L} × ${W} mm</b><span>${s.placed.length} Teile · ${(used / sheetArea * 100).toFixed(1)} % belegt</span></div>${svg}</div>`;
+  valid.sort((a,b) => {
+    if (a.sheets.length !== b.sheets.length) return a.sheets.length - b.sheets.length;
+    const lastArea = x => x.sheets.at(-1).placed.reduce((s,p)=>s+p.w*p.h,0);
+    return lastArea(b) - lastArea(a);
   });
-
-  results.innerHTML = html;
-  results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  return valid[0];
 }
 
-document.getElementById('add').addEventListener('click', () => {
-  addCut({}, true);
-  showToast('Neues Teil hinzugefügt');
-});
-document.getElementById('calc').addEventListener('click', render);
-document.getElementById('demo').addEventListener('click', () => {
-  cutsEl.innerHTML = '';
-  [
-    { name: 'Ortgang', l: 2000, w: 330, mode: 'm', q: 5.5 },
-    { name: 'Traufe', l: 1000, w: 250, mode: 'qty', q: 3 },
-    { name: 'Abdeckung', l: 800, w: 180, mode: 'qty', q: 4 }
-  ].forEach(v => addCut(v));
-  render();
-});
-document.getElementById('clear').addEventListener('click', () => {
-  cutsEl.innerHTML = '';
-  addCut();
-  results.innerHTML = '<h2>Ergebnis</h2><div class="sub">Noch keine Berechnung.</div>';
-  save();
-  showToast('Zurückgesetzt');
-});
-
-[sheetL, sheetW, marginEl, gapEl, rotateEl].forEach(el => {
-  el.addEventListener('input', save);
-  el.addEventListener('change', save);
-});
-
-load();
-
-if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
-}
+function usefulRests(sheet, minSide = 100, minArea = 50000) {
+  return sheet.free
+    .filter(r => r.w >= minSide && r.h >= minSide && r.w * r.h >= minArea)
+    .sort((a,b) => b.w*b.h - a.w*a.h)
+    .slice(0, 6);
+}}
