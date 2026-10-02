@@ -206,4 +206,110 @@ function usefulRests(sheet, minSide = 100, minArea = 50000) {
     .filter(r => r.w >= minSide && r.h >= minSide && r.w * r.h >= minArea)
     .sort((a,b) => b.w*b.h - a.w*a.h)
     .slice(0, 6);
-}}
+}
+
+function color(i) {
+  const colors = ['#f4bd31','#5cc8ff','#ff7a8a','#80df9a','#c792ea','#ffad5a','#7fd1c8','#9da7ff'];
+  return colors[i % colors.length];
+}
+
+function render() {
+  save();
+  const L=+sheetL.value, W=+sheetW.value, m=+marginEl.value, g=+gapEl.value, rot=rotateEl.checked;
+  const cuts=readCuts(false);
+  if (!L || !W || !cuts.length) {
+    results.innerHTML='<h2>Ergebnis</h2><div class="error">Bitte Plattengröße und mindestens einen gültigen Zuschnitt eingeben.</div>';
+    return;
+  }
+  const usableL=L-2*m, usableW=W-2*m;
+  if (usableL<=0 || usableW<=0) {
+    results.innerHTML='<h2>Ergebnis</h2><div class="error">Randabstand ist zu groß.</div>';
+    return;
+  }
+
+  const items=[];
+  cuts.forEach((cut,ci)=>{
+    if(cut.mode==='m'){
+      let remaining=Math.round(cut.q*1000);
+      while(remaining>0){
+        const partL=Math.min(cut.l,remaining);
+        items.push({name:cut.name,w:partL,h:cut.w,ci,origL:partL,origW:cut.w});
+        remaining-=partL;
+      }
+    } else {
+      for(let k=0;k<Math.ceil(cut.q);k++) items.push({name:cut.name,w:cut.l,h:cut.w,ci,origL:cut.l,origW:cut.w});
+    }
+  });
+
+  const res=pack(items,usableL,usableW,g,rot);
+  if(res.error){
+    results.innerHTML=`<h2>Ergebnis</h2><div class="error">${esc(res.error.name)} (${res.error.origL} × ${res.error.origW} mm) passt auf keine Platte.</div>`;
+    return;
+  }
+
+  const totalArea=items.reduce((s,i)=>s+i.w*i.h,0);
+  const sheetArea=L*W, totalSheetArea=res.sheets.length*sheetArea;
+  const waste=totalSheetArea-totalArea, util=totalArea/totalSheetArea*100;
+
+  let html=`<h2>Ergebnis</h2><div class="stats">
+    <div class="stat"><b>${res.sheets.length}</b><span>Platten benötigt</span></div>
+    <div class="stat"><b>${(totalArea/1e6).toFixed(2)} m²</b><span>Zuschnittfläche</span></div>
+    <div class="stat"><b>${(waste/1e6).toFixed(2)} m²</b><span>Rest/Verschnitt</span></div>
+    <div class="stat"><b>${util.toFixed(1)} %</b><span>Flächennutzung</span></div>
+  </div><div class="legend">Mehrere Anordnungen werden geprüft. Brauchbare Reststücke ab ca. 100 × 100 mm werden je Platte angezeigt.</div>`;
+
+  res.sheets.forEach((s,si)=>{
+    const vw=900, vh=Math.max(280,Math.round(vw*W/L)), sx=vw/L, sy=vh/W;
+    const rests=usefulRests(s);
+    let svg=`<svg viewBox="0 0 ${vw} ${vh}" role="img" aria-label="Schnittplan Platte ${si+1}"><rect x="0" y="0" width="${vw}" height="${vh}" fill="#0d0f11" stroke="#70777f" stroke-width="2"/>`;
+    if(m>0) svg+=`<rect x="${m*sx}" y="${m*sy}" width="${usableL*sx}" height="${usableW*sy}" fill="none" stroke="#727982" stroke-dasharray="8 6"/>`;
+
+    rests.forEach(r=>{
+      const x=(r.x+m)*sx,y=(r.y+m)*sy,w=r.w*sx,h=r.h*sy;
+      svg+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#20252a" stroke="#68717a" stroke-dasharray="6 5"/>
+      <text x="${x+w/2}" y="${y+h/2}" text-anchor="middle" fill="#aab2ba" font-size="11">Rest ${Math.round(r.w)}×${Math.round(r.h)}</text>`;
+    });
+
+    s.placed.forEach((p,pi)=>{
+      const x=(p.x+m)*sx,y=(p.y+m)*sy,w=p.w*sx,h=p.h*sy;
+      svg+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${color(p.ci)}" fill-opacity=".78" stroke="#111" stroke-width="2"/>
+      <text x="${x+w/2}" y="${y+h/2-5}" text-anchor="middle" fill="#101214" font-size="${Math.max(10,Math.min(20,w/8))}" font-weight="700">${pi+1}. ${esc(p.name)}</text>
+      <text x="${x+w/2}" y="${y+h/2+15}" text-anchor="middle" fill="#101214" font-size="${Math.max(9,Math.min(16,w/10))}">${p.origL}×${p.origW}${p.rot?' ↻':''}</text>`;
+    });
+    svg+='</svg>';
+    const used=s.placed.reduce((a,p)=>a+p.w*p.h,0);
+    const cutList=`<div class="legend"><b>Teile:</b> ${s.placed.map((p,i)=>`${i+1}. ${esc(p.name)} ${p.origL}×${p.origW}${p.rot?' (gedreht)':''}`).join(' · ')}</div>`;
+    const restText=rests.length?`<div class="legend"><b>Brauchbare Reste:</b> ${rests.map(r=>`${Math.round(r.w)} × ${Math.round(r.h)} mm`).join(' · ')}</div>`:'';
+    html+=`<div class="sheet"><div class="sheethead"><b>Platte ${si+1} · ${L} × ${W} mm</b><span>${s.placed.length} Teile · ${(used/sheetArea*100).toFixed(1)} % belegt</span></div>${svg}${cutList}${restText}</div>`;
+  });
+  results.innerHTML=html;
+  results.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+document.getElementById('add').addEventListener('click',()=>{
+  addCut({},true);
+  showToast('Neues Teil hinzugefügt');
+});
+document.getElementById('calc').addEventListener('click',render);
+document.getElementById('demo').addEventListener('click',()=>{
+  cutsEl.innerHTML='';
+  [
+    {name:'Ortgang',l:2000,w:330,mode:'m',q:5.5},
+    {name:'Traufe',l:1000,w:250,mode:'qty',q:3},
+    {name:'Abdeckung',l:800,w:180,mode:'qty',q:4}
+  ].forEach(v=>addCut(v));
+  render();
+});
+document.getElementById('clear').addEventListener('click',()=>{
+  cutsEl.innerHTML='';
+  addCut();
+  results.innerHTML='<h2>Ergebnis</h2><div class="sub">Noch keine Berechnung.</div>';
+  save();
+  showToast('Zurückgesetzt');
+});
+[sheetL,sheetW,marginEl,gapEl,rotateEl].forEach(el=>{
+  el.addEventListener('input',save);
+  el.addEventListener('change',save);
+});
+
+load();
