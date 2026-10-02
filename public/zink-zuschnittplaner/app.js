@@ -10,6 +10,8 @@ const rotateEl = document.getElementById('rotate');
 const cutCountEl = document.getElementById('cutCount');
 const toastEl = document.getElementById('toast');
 const jobNameEl = document.getElementById('jobName');
+const savedJobsEl = document.getElementById('savedJobs');
+let activeJobId = null;
 let nextId = 1;
 let doneParts = new Set(storageGet('zinkDoneParts', []));
 function doneKey(si, pi, p){ return [si,pi,p.name,p.origL,p.origW].join('|'); }
@@ -107,6 +109,47 @@ function save() {
   });
 }
 
+function jobSnapshot(){
+  return {
+    id: activeJobId || String(Date.now()),
+    name: jobNameEl.value.trim(),
+    updated: Date.now(),
+    settings:{l:sheetL.value,w:sheetW.value,margin:marginEl.value,gap:gapEl.value,rotate:rotateEl.checked},
+    cuts:readCuts(true),
+    done:[...doneParts]
+  };
+}
+function renderSavedJobs(){
+  const jobs=storageGet('zinkJobs',[]);
+  if(!jobs.length){ savedJobsEl.innerHTML='<div class="sub">Noch keine Baustellen gespeichert.</div>'; return; }
+  savedJobsEl.innerHTML='<label>Gespeicherte Baustellen</label>'+jobs.sort((a,b)=>b.updated-a.updated).map(x=>`<div class="row" style="padding:8px 0;border-top:1px solid var(--line)"><button type="button" class="secondary open-job grow" data-id="${esc(x.id)}" style="text-align:left">${esc(x.name||'Unbenannte Baustelle')}</button><button type="button" class="danger delete-job" data-id="${esc(x.id)}">×</button></div>`).join('');
+  savedJobsEl.querySelectorAll('.open-job').forEach(b=>b.addEventListener('click',()=>openJob(b.dataset.id)));
+  savedJobsEl.querySelectorAll('.delete-job').forEach(b=>b.addEventListener('click',()=>deleteJob(b.dataset.id)));
+}
+function saveJob(){
+  const name=jobNameEl.value.trim();
+  if(!name){ showToast('Bitte Baustellenname eingeben'); jobNameEl.focus(); return; }
+  const snap=jobSnapshot(); activeJobId=snap.id;
+  const jobs=storageGet('zinkJobs',[]).filter(x=>x.id!==snap.id); jobs.push(snap); storageSet('zinkJobs',jobs);
+  renderSavedJobs(); showToast('Baustelle gespeichert');
+}
+function openJob(id){
+  const job=storageGet('zinkJobs',[]).find(x=>x.id===id); if(!job)return;
+  activeJobId=job.id; jobNameEl.value=job.name||'';
+  sheetL.value=job.settings?.l||2000; sheetW.value=job.settings?.w||1000; marginEl.value=job.settings?.margin||0; gapEl.value=job.settings?.gap||0; rotateEl.checked=job.settings?.rotate!==false;
+  doneParts=new Set(job.done||[]); saveDone(); cutsEl.innerHTML=''; (job.cuts?.length?job.cuts:[{}]).forEach(v=>addCut(v));
+  save(); render(); showToast('Baustelle geöffnet');
+}
+function deleteJob(id){
+  storageSet('zinkJobs',storageGet('zinkJobs',[]).filter(x=>x.id!==id));
+  if(activeJobId===id) activeJobId=null; renderSavedJobs(); showToast('Baustelle gelöscht');
+}
+function newJob(){
+  activeJobId=null; jobNameEl.value=''; sheetL.value=2000; sheetW.value=1000; marginEl.value=0; gapEl.value=0; rotateEl.checked=true;
+  doneParts.clear(); saveDone(); cutsEl.innerHTML=''; addCut();
+  results.innerHTML='<h2>Ergebnis</h2><div class="sub">Noch keine Berechnung.</div>'; save(); showToast('Neue Baustelle');
+}
+
 function load() {
   const s = storageGet('zinkSettings', {});
   if (s.l) sheetL.value = s.l;
@@ -119,6 +162,7 @@ function load() {
   const c = storageGet('zinkCuts', []);
   if (Array.isArray(c) && c.length) c.forEach(v => addCut(v));
   else addCut();
+  renderSavedJobs();
 }
 
 function pack(items, W, H, gap, allowRotate) {
@@ -309,6 +353,8 @@ function render() {
   results.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
+document.getElementById('saveJob').addEventListener('click',saveJob);
+document.getElementById('newJob').addEventListener('click',newJob);
 document.getElementById('add').addEventListener('click',()=>{
   addCut({},true);
   showToast('Neues Teil hinzugefügt');
