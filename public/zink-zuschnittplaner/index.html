@@ -17,7 +17,11 @@
 <body>
 <header><div class="wrap" style="padding:0"><h1>Zink Zuschnittplaner</h1><div class="sub">Plattenbedarf, Verschnitt und Schnittbilder automatisch berechnen</div></div></header>
 <main class="wrap">
-<section class="card"><div class="field"><label>Auftrag / Baustelle (optional)</label><input id="jobName" type="text" placeholder="z. B. Müller – Gaube"></div></section>
+<section class="card">
+<div class="field"><label>Auftrag / Baustelle</label><input id="jobName" type="text" placeholder="z. B. Müller – Gaube"></div>
+<div class="row" style="margin-top:10px"><button type="button" id="saveJob">Baustelle speichern</button><button type="button" class="secondary" id="newJob">Neue Baustelle</button></div>
+<div id="savedJobs" style="margin-top:12px"></div>
+</section>
 <section class="card">
 <h2>Ausgangsplatte</h2>
 <div class="grid four">
@@ -40,8 +44,8 @@
 <button type="button" id="calc"><span class="ico">✓</span><span>Berechnen</span></button>
 <button type="button" class="secondary" id="demo"><span class="ico">▦</span><span>Beispiel</span></button>
 <button type="button" class="danger" id="clear"><span class="ico">×</span><span>Löschen</span></button>
-</nav><footer style="text-align:center;color:#6f7780;font-size:11px;padding:4px 16px calc(20px + env(safe-area-inset-bottom))">Zink Zuschnittplaner · V1.4.1</footer>
+</nav><footer style="text-align:center;color:#6f7780;font-size:11px;padding:4px 16px calc(20px + env(safe-area-inset-bottom))">Zink Zuschnittplaner · V1.5</footer>
 <div id="toast" class="toast" aria-live="polite"></div>
-<script src="./app.js?v=1.4.1" defer></script>
+<script src="./app.js?v=1.5" defer></script>
 </body>
 </html>
