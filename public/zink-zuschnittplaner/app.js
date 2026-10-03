@@ -14,6 +14,7 @@ const savedJobsEl = document.getElementById('savedJobs');
 const jobsPageEl = document.getElementById('jobsPage');
 const sheetPresetEl = document.getElementById('sheetPreset');
 const saveSheetPresetEl = document.getElementById('saveSheetPreset');
+const sheetPresetNameEl = document.getElementById('sheetPresetName');
 const deleteSheetPresetEl = document.getElementById('deleteSheetPreset');
 const mainSections = [...document.querySelectorAll('main > section:not(#jobsPage)')];
 let activeJobId = null;
@@ -122,20 +123,20 @@ function renderSheetPresets(){
 function saveSheetPreset(){
   const l=+sheetL.value,w=+sheetW.value;
   if(!l||!w){showToast('Plattengröße fehlt');return;}
-  const name=prompt('Name der Ausgangsplatte:',`${l} × ${w} mm`);
-  if(!name) return;
+  const name=(sheetPresetNameEl?.value||'').trim();
+  if(!name){showToast('Bitte Namen eingeben');sheetPresetNameEl?.focus();return;}
   const presets=storageGet('zinkSheetPresets',[]);
-  presets.push({name:name.trim(),l,w,margin:+marginEl.value||0,gap:+gapEl.value||0});
+  presets.push({name,l,w,margin:+marginEl.value||0,gap:+gapEl.value||0});
   storageSet('zinkSheetPresets',presets); renderSheetPresets(); sheetPresetEl.value=String(presets.length-1); showToast('Ausgangsplatte gespeichert');
 }
 function loadSheetPreset(){
   const presets=storageGet('zinkSheetPresets',[]), p=presets[+sheetPresetEl.value];
   if(!p) return;
-  sheetL.value=p.l; sheetW.value=p.w; marginEl.value=p.margin||0; gapEl.value=p.gap||0; save(); showToast('Ausgangsplatte geladen');
+  sheetL.value=p.l; sheetW.value=p.w; marginEl.value=p.margin||0; gapEl.value=p.gap||0; if(sheetPresetNameEl) sheetPresetNameEl.value=p.name||''; save(); showToast('Ausgangsplatte geladen');
 }
 function deleteSheetPreset(){
   const i=+sheetPresetEl.value; if(sheetPresetEl.value===''||!Number.isInteger(i)){showToast('Erst Platte auswählen');return;}
-  const presets=storageGet('zinkSheetPresets',[]); presets.splice(i,1); storageSet('zinkSheetPresets',presets); renderSheetPresets(); showToast('Ausgangsplatte gelöscht');
+  const presets=storageGet('zinkSheetPresets',[]); presets.splice(i,1); storageSet('zinkSheetPresets',presets); renderSheetPresets(); if(sheetPresetNameEl) sheetPresetNameEl.value=''; showToast('Ausgangsplatte gelöscht');
 }
 
 function jobSnapshot(){
