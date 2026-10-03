@@ -37,10 +37,10 @@
 <div style="margin-top:12px" class="check"><input id="rotate" type="checkbox" checked><label for="rotate" style="margin:0">Teile dürfen um 90° gedreht werden</label></div>
 </section>
 <section class="card">
-<div class="row"><div class="grow"><h2>Kantteil-Zeichner</h2><div class="sub">Mit dem Finger die Form zeichnen. Danach die Schenkel antippen und Maße eingeben.</div></div><span class="pill" id="bendTotal">0 mm</span></div>
+<div class="row"><div class="grow"><h2>Kantteil-Zeichner</h2><div class="sub">Form grob zeichnen – gerade Richtungen rasten automatisch ein. Seite antippen = Maß, Ecke antippen = Winkel.</div></div><span class="pill" id="bendTotal">0 mm</span></div>
 <canvas id="bendCanvas" width="900" height="420" style="width:100%;height:210px;margin-top:12px;background:#101214;border:1px solid var(--line);border-radius:12px;touch-action:none"></canvas>
 <div class="row" style="margin-top:10px"><button type="button" class="secondary" id="bendUndo">↶ Zurück</button><button type="button" class="secondary" id="bendClear">Neu zeichnen</button><button type="button" id="bendAdd">Zum Zuschnitt</button></div>
-<div class="sub" style="margin-top:8px">Tipp: Jeder gezeichnete Abschnitt ist ein Schenkel. Schenkel antippen → echtes Maß in mm eingeben. Die Zeichnung muss nicht maßstabsgerecht sein.</div>
+<div class="sub" style="margin-top:8px">Seite antippen → Schenkelmaß eingeben. Ecke antippen → Winkel eingeben. Waagerechte, senkrechte und 45°-Linien werden beim Zeichnen automatisch begradigt.</div>
 </section>
 <section class="card">
 <div class="row"><div class="grow"><h2>Zuschnitte</h2><div class="sub">Länge × Breite in mm, Bedarf wahlweise als Stückzahl oder laufende Meter.</div></div><span class="pill" id="cutCount">0 Teile</span></div>
@@ -55,9 +55,9 @@
 <button type="button" id="calc"><span class="ico">✓</span><span>Berechnen</span></button>
 <button type="button" class="secondary" id="jobs"><span class="ico">▦</span><span>Baustellen</span></button>
 <button type="button" class="danger" id="clear"><span class="ico">×</span><span>Löschen</span></button>
-</nav><footer style="text-align:center;color:#6f7780;font-size:11px;padding:4px 16px calc(20px + env(safe-area-inset-bottom))">Zink Zuschnittplaner · V2.23</footer>
+</nav><footer style="text-align:center;color:#6f7780;font-size:11px;padding:4px 16px calc(20px + env(safe-area-inset-bottom))">Zink Zuschnittplaner · V2.24</footer>
 <div id="toast" class="toast" aria-live="polite"></div>
-<script src="./app.js?v=2.23" defer></script>
+<script src="./app.js?v=2.24" defer></script>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister()));caches.keys().then(ks=>ks.forEach(k=>caches.delete(k)));}</script>
 </body>
 </html>
