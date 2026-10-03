@@ -24,14 +24,14 @@
 
 </section>
 <section class="card">
-<h2>Ausgangsplatte</h2>
+<div class="row"><div class="grow"><h2>Ausgangsplatte</h2></div><select id="sheetPreset" class="secondary" style="max-width:240px;padding:10px;border-radius:11px;border:1px solid var(--line);background:var(--card2);color:var(--text)"><option value="">Gespeicherte Platte wählen</option></select></div>
 <div class="grid four">
 <div class="field"><label>Plattenlänge (mm)</label><input id="sheetL" type="number" value="2000" min="1"></div>
 <div class="field"><label>Plattenbreite (mm)</label><input id="sheetW" type="number" value="1000" min="1"></div>
 <div class="field"><label>Randabstand (mm)</label><input id="margin" type="number" value="0" min="0"></div>
 <div class="field"><label>Schnittfuge / Abstand (mm)</label><input id="gap" type="number" value="0" min="0"></div>
 </div>
-<div style="margin-top:12px" class="check"><input id="rotate" type="checkbox" checked><label for="rotate" style="margin:0">Teile dürfen um 90° gedreht werden</label></div>
+<div class="row" style="margin-top:12px"><button type="button" class="secondary" id="saveSheetPreset">Platte speichern</button><button type="button" class="danger" id="deleteSheetPreset">Gespeicherte Platte löschen</button></div><div style="margin-top:12px" class="check"><input id="rotate" type="checkbox" checked><label for="rotate" style="margin:0">Teile dürfen um 90° gedreht werden</label></div>
 </section>
 <section class="card">
 <div class="row"><div class="grow"><h2>Zuschnitte</h2><div class="sub">Länge × Breite in mm, Bedarf wahlweise als Stückzahl oder laufende Meter.</div></div><span class="pill" id="cutCount">0 Teile</span></div>
@@ -46,9 +46,9 @@
 <button type="button" id="calc"><span class="ico">✓</span><span>Berechnen</span></button>
 <button type="button" class="secondary" id="jobs"><span class="ico">▦</span><span>Baustellen</span></button>
 <button type="button" class="danger" id="clear"><span class="ico">×</span><span>Löschen</span></button>
-</nav><footer style="text-align:center;color:#6f7780;font-size:11px;padding:4px 16px calc(20px + env(safe-area-inset-bottom))">Zink Zuschnittplaner · V2.20</footer>
+</nav><footer style="text-align:center;color:#6f7780;font-size:11px;padding:4px 16px calc(20px + env(safe-area-inset-bottom))">Zink Zuschnittplaner · V2.21</footer>
 <div id="toast" class="toast" aria-live="polite"></div>
-<script src="./app.js?v=2.20" defer></script>
+<script src="./app.js?v=2.21" defer></script>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister()));caches.keys().then(ks=>ks.forEach(k=>caches.delete(k)));}</script>
 </body>
 </html>
