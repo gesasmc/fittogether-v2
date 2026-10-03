@@ -388,22 +388,30 @@ function render(options = {}) {
 
 
 const bendCanvas=document.getElementById('bendCanvas'), bendCtx=bendCanvas?.getContext('2d'), bendTotal=document.getElementById('bendTotal');
-let bendPts=[],bendLens=[],bendDrawing=false;
+let bendPts=[],bendLens=[],bendAngles=[],bendDrawing=false,bendMoved=false,bendDown=null;
 function bendPos(e){const r=bendCanvas.getBoundingClientRect();return{x:(e.clientX-r.left)*bendCanvas.width/r.width,y:(e.clientY-r.top)*bendCanvas.height/r.height};}
+function snapBend(a,p){const dx=p.x-a.x,dy=p.y-a.y,ang=Math.atan2(dy,dx),step=Math.PI/4,s=Math.round(ang/step)*step,d=Math.hypot(dx,dy);if(Math.abs(ang-s)<0.20)return{x:a.x+Math.cos(s)*d,y:a.y+Math.sin(s)*d};return p;}
 function drawBend(){
  if(!bendCtx)return; bendCtx.clearRect(0,0,bendCanvas.width,bendCanvas.height);
- bendCtx.lineWidth=7;bendCtx.lineCap='round';bendCtx.lineJoin='round';bendCtx.strokeStyle='#f4bd31';bendCtx.fillStyle='#f2f3f5';bendCtx.font='bold 30px system-ui';
+ bendCtx.lineWidth=7;bendCtx.lineCap='round';bendCtx.lineJoin='round';bendCtx.strokeStyle='#f4bd31';bendCtx.fillStyle='#f2f3f5';bendCtx.font='bold 27px system-ui';
  if(bendPts.length){bendCtx.beginPath();bendCtx.moveTo(bendPts[0].x,bendPts[0].y);for(let i=1;i<bendPts.length;i++)bendCtx.lineTo(bendPts[i].x,bendPts[i].y);bendCtx.stroke();}
- for(let i=0;i<bendPts.length-1;i++){const a=bendPts[i],b=bendPts[i+1],txt=bendLens[i]?bendLens[i]+' mm':'antippen';bendCtx.fillText(txt,(a.x+b.x)/2+10,(a.y+b.y)/2-12);}
+ for(let i=0;i<bendPts.length-1;i++){const a=bendPts[i],b=bendPts[i+1];if(bendLens[i]){const mx=(a.x+b.x)/2,my=(a.y+b.y)/2;bendCtx.fillStyle='#fff';bendCtx.fillText(bendLens[i]+' mm',mx+8,my-12);}}
+ for(let i=1;i<bendPts.length-1;i++){if(bendAngles[i-1]){const p=bendPts[i];bendCtx.fillStyle='#9da5ad';bendCtx.font='bold 23px system-ui';bendCtx.fillText(bendAngles[i-1]+'°',p.x+12,p.y+28);bendCtx.font='bold 27px system-ui';}}
  const total=bendLens.reduce((a,n)=>a+(+n||0),0); if(bendTotal)bendTotal.textContent=total+' mm';
 }
-function nearestBend(p){let best=-1,dist=45;for(let i=0;i<bendPts.length-1;i++){const a=bendPts[i],b=bendPts[i+1],vx=b.x-a.x,vy=b.y-a.y,wx=p.x-a.x,wy=p.y-a.y,t=Math.max(0,Math.min(1,(wx*vx+wy*vy)/(vx*vx+vy*vy||1))),dx=p.x-(a.x+t*vx),dy=p.y-(a.y+t*vy),d=Math.hypot(dx,dy);if(d<dist){dist=d;best=i;}}return best;}
-bendCanvas?.addEventListener('pointerdown',e=>{e.preventDefault();bendDrawing=true;bendPts=[bendPos(e)];bendLens=[];bendCanvas.setPointerCapture?.(e.pointerId);drawBend();});
-bendCanvas?.addEventListener('pointermove',e=>{if(!bendDrawing)return;e.preventDefault();const p=bendPos(e),last=bendPts[bendPts.length-1];if(Math.hypot(p.x-last.x,p.y-last.y)>55){bendPts.push(p);bendLens.push(0);drawBend();}});
-bendCanvas?.addEventListener('pointerup',e=>{if(!bendDrawing)return;bendDrawing=false;const p=bendPos(e),last=bendPts[bendPts.length-1];if(Math.hypot(p.x-last.x,p.y-last.y)>15){bendPts.push(p);bendLens.push(0);}drawBend();});
-bendCanvas?.addEventListener('click',e=>{if(bendDrawing||bendPts.length<2)return;const i=nearestBend(bendPos(e));if(i<0)return;const v=prompt('Schenkelmaß in mm:',bendLens[i]||'');if(v!==null&&+v>0){bendLens[i]=+v;drawBend();}});
-document.getElementById('bendUndo')?.addEventListener('click',()=>{if(bendPts.length>1){bendPts.pop();bendLens.pop();}else{bendPts=[];bendLens=[];}drawBend();});
-document.getElementById('bendClear')?.addEventListener('click',()=>{bendPts=[];bendLens=[];drawBend();});
+function segDist(p,a,b){const vx=b.x-a.x,vy=b.y-a.y,wx=p.x-a.x,wy=p.y-a.y,t=Math.max(0,Math.min(1,(wx*vx+wy*vy)/(vx*vx+vy*vy||1))),dx=p.x-(a.x+t*vx),dy=p.y-(a.y+t*vy);return Math.hypot(dx,dy);}
+function nearestBend(p){let best=-1,dist=55;for(let i=0;i<bendPts.length-1;i++){const d=segDist(p,bendPts[i],bendPts[i+1]);if(d<dist){dist=d;best=i;}}return best;}
+function nearestCorner(p){let best=-1,dist=48;for(let i=1;i<bendPts.length-1;i++){const d=Math.hypot(p.x-bendPts[i].x,p.y-bendPts[i].y);if(d<dist){dist=d;best=i;}}return best;}
+function addSketchPoint(p){if(!bendPts.length){bendPts.push(p);return;}const a=bendPts[bendPts.length-1],q=snapBend(a,p);if(Math.hypot(q.x-a.x)>28||Math.hypot(q.y-a.y)>28){bendPts.push(q);bendLens.push(0);if(bendPts.length>2)bendAngles.push(0);}}
+bendCanvas?.addEventListener('pointerdown',e=>{e.preventDefault();bendDrawing=true;bendMoved=false;bendDown=bendPos(e);bendCanvas.setPointerCapture?.(e.pointerId);});
+bendCanvas?.addEventListener('pointermove',e=>{if(!bendDrawing)return;e.preventDefault();const p=bendPos(e);if(Math.hypot(p.x-bendDown.x,p.y-bendDown.y)>18)bendMoved=true;});
+bendCanvas?.addEventListener('pointerup',e=>{if(!bendDrawing)return;e.preventDefault();bendDrawing=false;const p=bendPos(e);if(bendMoved){if(!bendPts.length)addSketchPoint(bendDown);addSketchPoint(p);drawBend();return;}
+ const c=nearestCorner(p);if(c>=0){const v=prompt('Winkel in Grad:',bendAngles[c-1]||'90');if(v!==null&&+v>0&&+v<180){bendAngles[c-1]=+v;drawBend();}return;}
+ const i=nearestBend(p);if(i>=0){const v=prompt('Schenkelmaß in mm:',bendLens[i]||'');if(v!==null&&+v>0){bendLens[i]=+v;drawBend();}return;}
+ addSketchPoint(p);drawBend();
+});
+document.getElementById('bendUndo')?.addEventListener('click',()=>{if(bendPts.length>1){bendPts.pop();bendLens.pop();if(bendAngles.length>bendPts.length-2)bendAngles.pop();}else{bendPts=[];bendLens=[];bendAngles=[];}drawBend();});
+document.getElementById('bendClear')?.addEventListener('click',()=>{bendPts=[];bendLens=[];bendAngles=[];drawBend();});
 document.getElementById('bendAdd')?.addEventListener('click',()=>{const total=bendLens.reduce((a,n)=>a+(+n||0),0);if(!total||bendLens.some(n=>!n)){showToast('Erst alle Schenkel bemaßen');return;}addCut({name:'Kantteil',l:+sheetL.value||2000,w:total,mode:'qty',q:1},false);showToast('Kantteil zum Zuschnitt hinzugefügt');document.querySelector('#cuts')?.scrollIntoView({behavior:'smooth',block:'center'});});
 drawBend();
 
