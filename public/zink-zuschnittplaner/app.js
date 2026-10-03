@@ -391,31 +391,28 @@ function render(options = {}) {
 
 
 const bendCanvas=document.getElementById('bendCanvas'), bendCtx=bendCanvas?.getContext('2d'), bendTotal=document.getElementById('bendTotal');
-let bendPts=[],bendLens=[],bendAngles=[],bendDrawing=false,bendMoved=false,bendDown=null,bendStartIndex=-1;
+let bendSegs=[],bendDrawing=false,bendMoved=false,bendDown=null,bendPreview=null;
 function bendPos(e){const r=bendCanvas.getBoundingClientRect();return{x:(e.clientX-r.left)*bendCanvas.width/r.width,y:(e.clientY-r.top)*bendCanvas.height/r.height};}
-function snapBend(a,p){const dx=p.x-a.x,dy=p.y-a.y,ang=Math.atan2(dy,dx),step=Math.PI/4,s=Math.round(ang/step)*step,d=Math.hypot(dx,dy);if(Math.abs(ang-s)<0.20)return{x:a.x+Math.cos(s)*d,y:a.y+Math.sin(s)*d};return p;}
+function snapBend(a,p){const dx=p.x-a.x,dy=p.y-a.y,ang=Math.atan2(dy,dx),step=Math.PI/4,s=Math.round(ang/step)*step,d=Math.hypot(dx,dy);if(Math.abs(ang-s)<0.22)return{x:a.x+Math.cos(s)*d,y:a.y+Math.sin(s)*d};return p;}
+function labelBox(text,x,y,muted=false){bendCtx.font='bold 25px system-ui';const w=bendCtx.measureText(text).width+20,h=36;x=Math.max(5,Math.min(895-w,x));y=Math.max(h+5,Math.min(415,y));bendCtx.fillStyle=muted?'rgba(42,48,54,.94)':'rgba(15,17,19,.94)';bendCtx.fillRect(x,y-h,w,h);bendCtx.fillStyle=muted?'#c7cdd3':'#fff';bendCtx.fillText(text,x+10,y-9);}
+function segAngle(s){return Math.atan2(s.b.y-s.a.y,s.b.x-s.a.x);}
+function sharedCorner(i,j){const a=bendSegs[i],b=bendSegs[j],near=(p,q)=>Math.hypot(p.x-q.x,p.y-q.y)<26;if(near(a.a,b.a))return a.a;if(near(a.a,b.b))return a.a;if(near(a.b,b.a))return a.b;if(near(a.b,b.b))return a.b;return null;}
 function drawBend(){
- if(!bendCtx)return; bendCtx.clearRect(0,0,bendCanvas.width,bendCanvas.height);
- bendCtx.lineWidth=7;bendCtx.lineCap='round';bendCtx.lineJoin='round';bendCtx.strokeStyle='#f4bd31';bendCtx.fillStyle='#f2f3f5';bendCtx.font='bold 27px system-ui';
- if(bendPts.length){bendCtx.beginPath();bendCtx.moveTo(bendPts[0].x,bendPts[0].y);for(let i=1;i<bendPts.length;i++)bendCtx.lineTo(bendPts[i].x,bendPts[i].y);bendCtx.stroke();}
- for(let i=0;i<bendPts.length-1;i++){const a=bendPts[i],b=bendPts[i+1];if(bendLens[i]){const mx=(a.x+b.x)/2,my=(a.y+b.y)/2;bendCtx.fillStyle='#fff';bendCtx.fillText(bendLens[i]+' mm',mx+8,my-12);}}
- for(let i=1;i<bendPts.length-1;i++){if(bendAngles[i-1]){const p=bendPts[i];bendCtx.fillStyle='#9da5ad';bendCtx.font='bold 23px system-ui';bendCtx.fillText(bendAngles[i-1]+'°',p.x+12,p.y+28);bendCtx.font='bold 27px system-ui';}}
- const total=bendLens.reduce((a,n)=>a+(+n||0),0); if(bendTotal)bendTotal.textContent=total+' mm';
+ if(!bendCtx)return;bendCtx.clearRect(0,0,bendCanvas.width,bendCanvas.height);bendCtx.lineWidth=7;bendCtx.lineCap='round';bendCtx.lineJoin='round';
+ bendSegs.forEach(s=>{bendCtx.strokeStyle='#f4bd31';bendCtx.beginPath();bendCtx.moveTo(s.a.x,s.a.y);bendCtx.lineTo(s.b.x,s.b.y);bendCtx.stroke();if(s.len){const mx=(s.a.x+s.b.x)/2,my=(s.a.y+s.b.y)/2;labelBox(s.len+' mm',mx+10,my-12);}});
+ if(bendPreview){bendCtx.strokeStyle='rgba(244,189,49,.55)';bendCtx.beginPath();bendCtx.moveTo(bendPreview.a.x,bendPreview.a.y);bendCtx.lineTo(bendPreview.b.x,bendPreview.b.y);bendCtx.stroke();}
+ const shown=[];for(let i=0;i<bendSegs.length;i++)for(let j=i+1;j<bendSegs.length;j++){const p=sharedCorner(i,j);if(!p)continue;const key=Math.round(p.x)+'|'+Math.round(p.y);if(shown.includes(key))continue;shown.push(key);const a1=segAngle(bendSegs[i]),a2=segAngle(bendSegs[j]);let deg=Math.abs((a2-a1)*180/Math.PI);if(deg>180)deg=360-deg;deg=Math.round(deg);labelBox(deg+'°',p.x+12,p.y+42,true);}
+ const total=bendSegs.reduce((a,s)=>a+(+s.len||0),0);if(bendTotal)bendTotal.textContent=total+' mm';
 }
-function segDist(p,a,b){const vx=b.x-a.x,vy=b.y-a.y,wx=p.x-a.x,wy=p.y-a.y,t=Math.max(0,Math.min(1,(wx*vx+wy*vy)/(vx*vx+vy*vy||1))),dx=p.x-(a.x+t*vx),dy=p.y-(a.y+t*vy);return Math.hypot(dx,dy);}
-function nearestBend(p){let best=-1,dist=55;for(let i=0;i<bendPts.length-1;i++){const d=segDist(p,bendPts[i],bendPts[i+1]);if(d<dist){dist=d;best=i;}}return best;}
-function nearestCorner(p){let best=-1,dist=48;for(let i=1;i<bendPts.length-1;i++){const d=Math.hypot(p.x-bendPts[i].x,p.y-bendPts[i].y);if(d<dist){dist=d;best=i;}}return best;}
-function addSketchPoint(p){if(!bendPts.length){bendPts.push(p);return;}const a=bendPts[bendPts.length-1],q=snapBend(a,p);if(Math.hypot(q.x-a.x)>28||Math.hypot(q.y-a.y)>28){bendPts.push(q);bendLens.push(0);if(bendPts.length>2)bendAngles.push(0);}}
-bendCanvas?.addEventListener('pointerdown',e=>{e.preventDefault();bendDrawing=true;bendMoved=false;bendDown=bendPos(e);bendStartIndex=-1;let best=34;for(let i=0;i<bendPts.length;i++){const d=Math.hypot(bendDown.x-bendPts[i].x,bendDown.y-bendPts[i].y);if(d<best){best=d;bendStartIndex=i;}}bendCanvas.setPointerCapture?.(e.pointerId);});
-bendCanvas?.addEventListener('pointermove',e=>{if(!bendDrawing)return;e.preventDefault();const p=bendPos(e);if(Math.hypot(p.x-bendDown.x,p.y-bendDown.y)>18)bendMoved=true;});
-bendCanvas?.addEventListener('pointerup',e=>{if(!bendDrawing)return;e.preventDefault();bendDrawing=false;const p=bendPos(e);if(bendMoved){if(bendStartIndex>=0){const a=bendPts[bendStartIndex],q=snapBend(a,p);bendPts.splice(bendStartIndex+1,0,q);bendLens.splice(bendStartIndex,0,0);bendAngles=[];}else{bendPts.push(bendDown);bendPts.push(snapBend(bendDown,p));bendLens.push(0);bendAngles=[];}drawBend();return;}
- const c=nearestCorner(p);if(c>=0){const v=prompt('Winkel in Grad:',bendAngles[c-1]||'90');if(v!==null&&+v>0&&+v<180){bendAngles[c-1]=+v;drawBend();}return;}
- const i=nearestBend(p);if(i>=0){const v=prompt('Schenkelmaß in mm:',bendLens[i]||'');if(v!==null&&+v>0){bendLens[i]=+v;drawBend();}return;}
- addSketchPoint(p);drawBend();
-});
-document.getElementById('bendUndo')?.addEventListener('click',()=>{if(bendPts.length>1){bendPts.pop();bendLens.pop();if(bendAngles.length>bendPts.length-2)bendAngles.pop();}else{bendPts=[];bendLens=[];bendAngles=[];}drawBend();});
-document.getElementById('bendClear')?.addEventListener('click',()=>{bendPts=[];bendLens=[];bendAngles=[];drawBend();});
-document.getElementById('bendAdd')?.addEventListener('click',()=>{const total=bendLens.reduce((a,n)=>a+(+n||0),0);if(!total||bendLens.some(n=>!n)){showToast('Erst alle Schenkel bemaßen');return;}const sketch=bendCanvas.toDataURL('image/png');addCut({name:'Kantteil',l:+sheetL.value||2000,w:total,mode:'qty',q:1,sketch},false);showToast('Kantteil zum Zuschnitt hinzugefügt');document.querySelector('#cuts')?.scrollIntoView({behavior:'smooth',block:'center'});});
+function segDist(p,s){const a=s.a,b=s.b,vx=b.x-a.x,vy=b.y-a.y,wx=p.x-a.x,wy=p.y-a.y,t=Math.max(0,Math.min(1,(wx*vx+wy*vy)/(vx*vx+vy*vy||1))),dx=p.x-(a.x+t*vx),dy=p.y-(a.y+t*vy);return Math.hypot(dx,dy);}
+function nearestSeg(p){let best=-1,d0=48;bendSegs.forEach((s,i)=>{const d=segDist(p,s);if(d<d0){d0=d;best=i;}});return best;}
+function nearestPoint(p){let best=null,d0=34;bendSegs.forEach(s=>[s.a,s.b].forEach(q=>{const d=Math.hypot(p.x-q.x,p.y-q.y);if(d<d0){d0=d;best=q;}}));return best;}
+bendCanvas?.addEventListener('pointerdown',e=>{e.preventDefault();bendDrawing=true;bendMoved=false;bendDown=bendPos(e);bendPreview=null;bendCanvas.setPointerCapture?.(e.pointerId);});
+bendCanvas?.addEventListener('pointermove',e=>{if(!bendDrawing)return;e.preventDefault();const p=bendPos(e);if(Math.hypot(p.x-bendDown.x,p.y-bendDown.y)>12){bendMoved=true;const start=nearestPoint(bendDown)||bendDown;bendPreview={a:{...start},b:snapBend(start,p)};drawBend();}});
+bendCanvas?.addEventListener('pointerup',e=>{if(!bendDrawing)return;e.preventDefault();bendDrawing=false;const p=bendPos(e);if(bendMoved){const start=nearestPoint(bendDown)||bendDown,end=snapBend(start,p);if(Math.hypot(end.x-start.x,end.y-start.y)>24)bendSegs.push({a:{...start},b:{...end},len:0});bendPreview=null;drawBend();return;}const i=nearestSeg(p);if(i>=0){const v=prompt('Schenkelmaß in mm:',bendSegs[i].len||'');if(v!==null&&+v>0){bendSegs[i].len=+v;drawBend();}}});
+document.getElementById('bendUndo')?.addEventListener('click',()=>{bendSegs.pop();drawBend();});
+document.getElementById('bendClear')?.addEventListener('click',()=>{bendSegs=[];bendPreview=null;drawBend();});
+document.getElementById('bendAdd')?.addEventListener('click',()=>{const total=bendSegs.reduce((a,s)=>a+(+s.len||0),0);if(!total||bendSegs.some(s=>!s.len)){showToast('Erst alle Schenkel bemaßen');return;}const sketch=bendCanvas.toDataURL('image/png');addCut({name:'Kantteil',l:+sheetL.value||2000,w:total,mode:'qty',q:1,sketch},false);showToast('Kantteil zum Zuschnitt hinzugefügt');document.querySelector('#cuts')?.scrollIntoView({behavior:'smooth',block:'center'});});
 drawBend();
 
 saveSheetPresetEl?.addEventListener('click',saveSheetPreset);
