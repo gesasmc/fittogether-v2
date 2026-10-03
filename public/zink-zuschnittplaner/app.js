@@ -61,7 +61,9 @@ function addCut(v = { name: '', l: '', w: '', mode: 'qty', q: 1 }, focus = false
   const d = document.createElement('div');
   d.className = 'cut';
   d.dataset.id = id;
+  if(v.sketch) d.dataset.sketch=v.sketch;
   d.innerHTML = `
+    ${v.sketch ? '<div class="bend-thumb" style="grid-column:1/-1;background:#101214;border:1px solid var(--line);border-radius:10px;padding:8px"><img src="'+v.sketch+'" alt="Kantteil-Skizze" style="display:block;width:100%;max-height:150px;object-fit:contain"></div>' : ''}
     <div class="name"><label>Bezeichnung</label><input data-k="name" placeholder="z. B. Ortgang" value="${esc(v.name || '')}"></div>
     <div><label>Länge (mm)</label><input data-k="l" inputmode="decimal" type="number" min="1" placeholder="2000" value="${v.l ?? ''}"></div>
     <div><label>Breite (mm)</label><input data-k="w" inputmode="decimal" type="number" min="1" placeholder="330" value="${v.w ?? ''}"></div>
@@ -98,7 +100,8 @@ function readCuts(includeIncomplete = false) {
       l: +o.l,
       w: +o.w,
       mode: o.mode || 'qty',
-      q: +o.q
+      q: +o.q,
+      sketch: d.dataset.sketch || ''
     };
   }).filter(x => includeIncomplete || (x.l > 0 && x.w > 0 && x.q > 0));
 }
@@ -388,7 +391,7 @@ function render(options = {}) {
 
 
 const bendCanvas=document.getElementById('bendCanvas'), bendCtx=bendCanvas?.getContext('2d'), bendTotal=document.getElementById('bendTotal');
-let bendPts=[],bendLens=[],bendAngles=[],bendDrawing=false,bendMoved=false,bendDown=null;
+let bendPts=[],bendLens=[],bendAngles=[],bendDrawing=false,bendMoved=false,bendDown=null,bendStartIndex=-1;
 function bendPos(e){const r=bendCanvas.getBoundingClientRect();return{x:(e.clientX-r.left)*bendCanvas.width/r.width,y:(e.clientY-r.top)*bendCanvas.height/r.height};}
 function snapBend(a,p){const dx=p.x-a.x,dy=p.y-a.y,ang=Math.atan2(dy,dx),step=Math.PI/4,s=Math.round(ang/step)*step,d=Math.hypot(dx,dy);if(Math.abs(ang-s)<0.20)return{x:a.x+Math.cos(s)*d,y:a.y+Math.sin(s)*d};return p;}
 function drawBend(){
@@ -403,16 +406,16 @@ function segDist(p,a,b){const vx=b.x-a.x,vy=b.y-a.y,wx=p.x-a.x,wy=p.y-a.y,t=Math
 function nearestBend(p){let best=-1,dist=55;for(let i=0;i<bendPts.length-1;i++){const d=segDist(p,bendPts[i],bendPts[i+1]);if(d<dist){dist=d;best=i;}}return best;}
 function nearestCorner(p){let best=-1,dist=48;for(let i=1;i<bendPts.length-1;i++){const d=Math.hypot(p.x-bendPts[i].x,p.y-bendPts[i].y);if(d<dist){dist=d;best=i;}}return best;}
 function addSketchPoint(p){if(!bendPts.length){bendPts.push(p);return;}const a=bendPts[bendPts.length-1],q=snapBend(a,p);if(Math.hypot(q.x-a.x)>28||Math.hypot(q.y-a.y)>28){bendPts.push(q);bendLens.push(0);if(bendPts.length>2)bendAngles.push(0);}}
-bendCanvas?.addEventListener('pointerdown',e=>{e.preventDefault();bendDrawing=true;bendMoved=false;bendDown=bendPos(e);bendCanvas.setPointerCapture?.(e.pointerId);});
+bendCanvas?.addEventListener('pointerdown',e=>{e.preventDefault();bendDrawing=true;bendMoved=false;bendDown=bendPos(e);bendStartIndex=-1;let best=34;for(let i=0;i<bendPts.length;i++){const d=Math.hypot(bendDown.x-bendPts[i].x,bendDown.y-bendPts[i].y);if(d<best){best=d;bendStartIndex=i;}}bendCanvas.setPointerCapture?.(e.pointerId);});
 bendCanvas?.addEventListener('pointermove',e=>{if(!bendDrawing)return;e.preventDefault();const p=bendPos(e);if(Math.hypot(p.x-bendDown.x,p.y-bendDown.y)>18)bendMoved=true;});
-bendCanvas?.addEventListener('pointerup',e=>{if(!bendDrawing)return;e.preventDefault();bendDrawing=false;const p=bendPos(e);if(bendMoved){if(!bendPts.length)addSketchPoint(bendDown);addSketchPoint(p);drawBend();return;}
+bendCanvas?.addEventListener('pointerup',e=>{if(!bendDrawing)return;e.preventDefault();bendDrawing=false;const p=bendPos(e);if(bendMoved){if(bendStartIndex>=0){const a=bendPts[bendStartIndex],q=snapBend(a,p);bendPts.splice(bendStartIndex+1,0,q);bendLens.splice(bendStartIndex,0,0);bendAngles=[];}else{bendPts.push(bendDown);bendPts.push(snapBend(bendDown,p));bendLens.push(0);bendAngles=[];}drawBend();return;}
  const c=nearestCorner(p);if(c>=0){const v=prompt('Winkel in Grad:',bendAngles[c-1]||'90');if(v!==null&&+v>0&&+v<180){bendAngles[c-1]=+v;drawBend();}return;}
  const i=nearestBend(p);if(i>=0){const v=prompt('Schenkelmaß in mm:',bendLens[i]||'');if(v!==null&&+v>0){bendLens[i]=+v;drawBend();}return;}
  addSketchPoint(p);drawBend();
 });
 document.getElementById('bendUndo')?.addEventListener('click',()=>{if(bendPts.length>1){bendPts.pop();bendLens.pop();if(bendAngles.length>bendPts.length-2)bendAngles.pop();}else{bendPts=[];bendLens=[];bendAngles=[];}drawBend();});
 document.getElementById('bendClear')?.addEventListener('click',()=>{bendPts=[];bendLens=[];bendAngles=[];drawBend();});
-document.getElementById('bendAdd')?.addEventListener('click',()=>{const total=bendLens.reduce((a,n)=>a+(+n||0),0);if(!total||bendLens.some(n=>!n)){showToast('Erst alle Schenkel bemaßen');return;}addCut({name:'Kantteil',l:+sheetL.value||2000,w:total,mode:'qty',q:1},false);showToast('Kantteil zum Zuschnitt hinzugefügt');document.querySelector('#cuts')?.scrollIntoView({behavior:'smooth',block:'center'});});
+document.getElementById('bendAdd')?.addEventListener('click',()=>{const total=bendLens.reduce((a,n)=>a+(+n||0),0);if(!total||bendLens.some(n=>!n)){showToast('Erst alle Schenkel bemaßen');return;}const sketch=bendCanvas.toDataURL('image/png');addCut({name:'Kantteil',l:+sheetL.value||2000,w:total,mode:'qty',q:1,sketch},false);showToast('Kantteil zum Zuschnitt hinzugefügt');document.querySelector('#cuts')?.scrollIntoView({behavior:'smooth',block:'center'});});
 drawBend();
 
 saveSheetPresetEl?.addEventListener('click',saveSheetPreset);
