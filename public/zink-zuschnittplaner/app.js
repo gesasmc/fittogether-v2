@@ -267,7 +267,8 @@ function color(i) {
   return colors[i % colors.length];
 }
 
-function render() {
+function render(options = {}) {
+  const { scrollToResults = false } = options;
   save();
   const L=+sheetL.value, W=+sheetW.value, m=+marginEl.value, g=+gapEl.value, rot=rotateEl.checked;
   const cuts=readCuts(false);
@@ -354,7 +355,7 @@ function render() {
     saveDone();
     render();
   }));
-  results.scrollIntoView({behavior:'smooth',block:'start'});
+  if (scrollToResults) results.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 document.getElementById('saveJob').addEventListener('click',saveJob);
@@ -363,7 +364,7 @@ document.getElementById('add').addEventListener('click',()=>{
   addCut({},true);
   showToast('Neues Teil hinzugefügt');
 });
-document.getElementById('calc').addEventListener('click',render);
+document.getElementById('calc').addEventListener('click',()=>render({scrollToResults:true}));
 document.getElementById('jobs').addEventListener('click',showJobs);
 document.getElementById('closeJobs').addEventListener('click',showMain);
 document.getElementById('clear').addEventListener('click',()=>{
