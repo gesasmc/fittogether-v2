@@ -12,6 +12,9 @@ const toastEl = document.getElementById('toast');
 const jobNameEl = document.getElementById('jobName');
 const savedJobsEl = document.getElementById('savedJobs');
 const jobsPageEl = document.getElementById('jobsPage');
+const sheetPresetEl = document.getElementById('sheetPreset');
+const saveSheetPresetEl = document.getElementById('saveSheetPreset');
+const deleteSheetPresetEl = document.getElementById('deleteSheetPreset');
 const mainSections = [...document.querySelectorAll('main > section:not(#jobsPage)')];
 let activeJobId = null;
 let nextId = 1;
@@ -111,6 +114,30 @@ function save() {
   });
 }
 
+function renderSheetPresets(){
+  if(!sheetPresetEl) return;
+  const presets=storageGet('zinkSheetPresets',[]);
+  sheetPresetEl.innerHTML='<option value="">Gespeicherte Platte wählen</option>'+presets.map((p,i)=>`<option value="${i}">${esc(p.name)} · ${p.l}×${p.w} mm</option>`).join('');
+}
+function saveSheetPreset(){
+  const l=+sheetL.value,w=+sheetW.value;
+  if(!l||!w){showToast('Plattengröße fehlt');return;}
+  const name=prompt('Name der Ausgangsplatte:',`${l} × ${w} mm`);
+  if(!name) return;
+  const presets=storageGet('zinkSheetPresets',[]);
+  presets.push({name:name.trim(),l,w,margin:+marginEl.value||0,gap:+gapEl.value||0});
+  storageSet('zinkSheetPresets',presets); renderSheetPresets(); sheetPresetEl.value=String(presets.length-1); showToast('Ausgangsplatte gespeichert');
+}
+function loadSheetPreset(){
+  const presets=storageGet('zinkSheetPresets',[]), p=presets[+sheetPresetEl.value];
+  if(!p) return;
+  sheetL.value=p.l; sheetW.value=p.w; marginEl.value=p.margin||0; gapEl.value=p.gap||0; save(); showToast('Ausgangsplatte geladen');
+}
+function deleteSheetPreset(){
+  const i=+sheetPresetEl.value; if(sheetPresetEl.value===''||!Number.isInteger(i)){showToast('Erst Platte auswählen');return;}
+  const presets=storageGet('zinkSheetPresets',[]); presets.splice(i,1); storageSet('zinkSheetPresets',presets); renderSheetPresets(); showToast('Ausgangsplatte gelöscht');
+}
+
 function jobSnapshot(){
   return {
     id: activeJobId || String(Date.now()),
@@ -167,6 +194,7 @@ function load() {
   if (Array.isArray(c) && c.length) c.forEach(v => addCut(v));
   else addCut();
   renderSavedJobs();
+  renderSheetPresets();
 }
 
 function pack(items, W, H, gap, allowRotate) {
@@ -347,17 +375,19 @@ function render(options = {}) {
   results.querySelectorAll('.reset-done').forEach(btn=>btn.addEventListener('click',()=>{
     const si=+btn.dataset.sheet;
     [...doneParts].filter(k=>k.startsWith(si+'|')).forEach(k=>doneParts.delete(k));
-    saveDone(); render(); showToast('Haken zurückgesetzt');
+    const y=window.scrollY; saveDone(); render(); requestAnimationFrame(()=>window.scrollTo(0,y)); showToast('Haken zurückgesetzt');
   }));
   results.querySelectorAll('[data-done-key]').forEach(el=>el.addEventListener('click',()=>{
     const key=el.dataset.doneKey;
     if(doneParts.has(key)) doneParts.delete(key); else doneParts.add(key);
-    saveDone();
-    render();
+    const y=window.scrollY; saveDone(); render(); requestAnimationFrame(()=>window.scrollTo(0,y));
   }));
   if (scrollToResults) results.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
+saveSheetPresetEl?.addEventListener('click',saveSheetPreset);
+sheetPresetEl?.addEventListener('change',loadSheetPreset);
+deleteSheetPresetEl?.addEventListener('click',deleteSheetPreset);
 document.getElementById('saveJob').addEventListener('click',saveJob);
 document.getElementById('newJob').addEventListener('click',newJob);
 document.getElementById('add').addEventListener('click',()=>{
