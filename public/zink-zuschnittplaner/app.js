@@ -420,15 +420,15 @@ drawBend();
 saveSheetPresetEl?.addEventListener('click',saveSheetPreset);
 sheetPresetEl?.addEventListener('change',loadSheetPreset);
 deleteSheetPresetEl?.addEventListener('click',deleteSheetPreset);
-document.getElementById('saveJob').addEventListener('click',saveJob);
-document.getElementById('newJob').addEventListener('click',newJob);
+
+
 document.getElementById('add').addEventListener('click',()=>{
   addCut({},true);
   showToast('Neues Teil hinzugefügt');
 });
 document.getElementById('calc').addEventListener('click',()=>render({scrollToResults:true}));
-document.getElementById('jobs').addEventListener('click',showJobs);
-document.getElementById('closeJobs').addEventListener('click',showMain);
+
+
 document.getElementById('clear').addEventListener('click',()=>{
   doneParts.clear(); saveDone();
   cutsEl.innerHTML='';
@@ -437,7 +437,7 @@ document.getElementById('clear').addEventListener('click',()=>{
   save();
   showToast('Zurückgesetzt');
 });
-[sheetL,sheetW,marginEl,gapEl,rotateEl,jobNameEl].forEach(el=>{
+[sheetL,sheetW,marginEl,gapEl,rotateEl].forEach(el=>{
   el.addEventListener('input',save);
   el.addEventListener('change',save);
 });
