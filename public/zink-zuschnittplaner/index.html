@@ -35,6 +35,7 @@
 <div class="row" style="margin-top:10px"><button type="button" class="secondary" id="bendUndo">↶ Zurück</button><button type="button" class="secondary" id="bendClear">Neu zeichnen</button><button type="button" id="bendAdd">Zum Zuschnitt</button></div>
 <div class="sub" style="margin-top:8px">Seite antippen → Schenkelmaß. Ecke antippen → Winkel in Grad bearbeiten. Waagerechte, senkrechte und 45°-Linien werden automatisch begradigt.</div>
 </section>
+<section class="card"><div class="row"><div class="grow"><h2>Rechteck / Kaminabdeckung</h2><div class="sub">Flache Platte mit umlaufender Abkantung und optionaler Umkantung anlegen.</div></div></div><div class="grid four" style="margin-top:12px"><div class="field"><label>Fertiglänge (mm)</label><input id="boxL" type="number" min="1" placeholder="800"></div><div class="field"><label>Fertigbreite (mm)</label><input id="boxW" type="number" min="1" placeholder="600"></div><div class="field"><label>Abkantung nach unten (mm)</label><input id="boxDown" type="number" min="0" value="50"></div><div class="field"><label>Umkantung (mm)</label><input id="boxHem" type="number" min="0" value="15"></div></div><div class="field" style="margin-top:12px"><label>Bezeichnung</label><input id="boxName" type="text" placeholder="z. B. Kaminabdeckung"></div><button type="button" id="boxAdd" style="margin-top:12px;width:100%">▭ Rechteck-Zuschnitt anlegen</button><div class="sub" style="margin-top:8px">Zuschnittmaß = Fertigmaß + Abkantung + Umkantung auf allen vier Seiten. Die Kantlinien werden in der Skizze eingezeichnet.</div></section>
 <section class="card">
 <div class="row"><div class="grow"><h2>Zuschnitte</h2><div class="sub">Länge × Breite in mm, Bedarf wahlweise als Stückzahl oder laufende Meter.</div></div><span class="pill" id="cutCount">0 Teile</span></div>
 <div id="cuts" class="cuts" style="margin-top:12px"></div>
@@ -47,9 +48,9 @@
 <button type="button" id="calc"><span class="ico">✓</span><span>Berechnen</span></button>
 
 <button type="button" class="danger" id="clear"><span class="ico">×</span><span>Löschen</span></button>
-</nav><footer style="text-align:center;color:#6f7780;font-size:11px;padding:4px 16px calc(20px + env(safe-area-inset-bottom))">Zink Zuschnittplaner · V2.35</footer>
+</nav><footer style="text-align:center;color:#6f7780;font-size:11px;padding:4px 16px calc(20px + env(safe-area-inset-bottom))">Zink Zuschnittplaner · V2.36</footer>
 <div id="toast" class="toast" aria-live="polite"></div>
-<script src="./app.js?v=2.35" defer></script>
+<script src="./app.js?v=2.36" defer></script>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister()));caches.keys().then(ks=>ks.forEach(k=>caches.delete(k)));}</script>
 </body>
 </html>
