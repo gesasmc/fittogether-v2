@@ -443,6 +443,3 @@ document.getElementById('clear').addEventListener('click',()=>{
 });
 
 load();
-
-// Baustellenhelfer integration
-(function(){const q=new URLSearchParams(location.search),jobId=q.get('job');if(!jobId)return;const saveBtn=document.createElement('button');saveBtn.type='button';saveBtn.textContent='✓ Für Baustelle speichern';saveBtn.style.cssText='position:fixed;right:14px;bottom:calc(92px + env(safe-area-inset-bottom));z-index:29;background:#f4bd31;color:#111;border:0;border-radius:14px;padding:12px 14px;font-weight:800;box-shadow:0 5px 18px rgba(0,0,0,.35)';saveBtn.onclick=()=>{const parts=readCuts(true),label=parts.length===1?(parts[0].name||'Zink-Zuschnitt'):(parts.length+' Zinkteile');localStorage.setItem('dachhelfer-zink-return',JSON.stringify({jobId,name:label,parts,date:new Date().toLocaleString('de-DE')}));location.href='/baustellenhelfer-test/?page=cuts'};document.body.appendChild(saveBtn)})();
