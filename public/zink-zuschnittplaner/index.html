@@ -17,6 +17,8 @@
 <body>
 <header><div class="wrap" style="padding:0"><h1>Zink <span style="color:var(--accent)">Zuschnittplaner</span></h1><div class="sub" style="font-size:11px;letter-spacing:.8px">SCHNELL · EINFACH · FÜR DIE BAUSTELLE</div></div></header>
 <main class="wrap">
+<section class="card" id="jobsPage"><div class="row"><div class="grow"><h2>🏠 Baustellen</h2><div class="sub">Zuschnitte je Baustelle speichern und später wieder öffnen.</div></div><button type="button" id="newJob">＋ Neu</button></div><div id="savedJobs" style="margin-top:12px"></div></section>
+<section class="card" id="jobSetup"><div class="row"><div class="grow"><h2>Baustelle</h2><div class="sub">Name eingeben und den aktuellen Zuschnitt darunter speichern.</div></div><button type="button" class="secondary" id="showJobs">Liste</button></div><div class="row" style="margin-top:12px"><div class="field grow"><input id="jobName" type="text" placeholder="z. B. Müller – Kamin"></div><button type="button" id="saveJob">Speichern</button></div></section>
 <section class="card"><h2>Ausgangsplatte</h2>
 <div class="field" style="margin-bottom:12px"><label>Gespeicherte Ausgangsplatte</label><select id="sheetPreset"><option value="">Platte auswählen …</option></select></div>
 <div class="grid four">
@@ -44,13 +46,14 @@
 <section class="card" id="results"><h2>Ergebnis</h2><div class="sub">Noch keine Berechnung.</div></section>
 </main>
 <nav class="bottomnav" aria-label="Werkzeuge">
+<button type="button" id="jobs"><span class="ico">▦</span><span>Baustellen</span></button>
 <button type="button" id="add"><span class="ico">＋</span><span>Teil</span></button>
 <button type="button" id="calc"><span class="ico">✓</span><span>Berechnen</span></button>
 
 <button type="button" class="danger" id="clear"><span class="ico">×</span><span>Löschen</span></button>
-</nav><footer style="text-align:center;color:#6f7780;font-size:11px;padding:4px 16px calc(20px + env(safe-area-inset-bottom))">Zink Zuschnittplaner · V2.36</footer>
+</nav><footer style="text-align:center;color:#6f7780;font-size:11px;padding:4px 16px calc(20px + env(safe-area-inset-bottom))">Zink Zuschnittplaner · V2.37</footer>
 <div id="toast" class="toast" aria-live="polite"></div>
-<script src="./app.js?v=2.36" defer></script>
+<script src="./app.js?v=2.37" defer></script>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister()));caches.keys().then(ks=>ks.forEach(k=>caches.delete(k)));}</script>
 </body>
 </html>
