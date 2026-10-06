@@ -11,6 +11,7 @@ const cutCountEl = document.getElementById('cutCount');
 const toastEl = document.getElementById('toast');
 const jobNameEl = document.getElementById('jobName');
 const savedJobsEl = document.getElementById('savedJobs');
+const jobSearchEl = document.getElementById('jobSearch');
 const jobsPageEl = document.getElementById('jobsPage');
 const sheetPresetEl = document.getElementById('sheetPreset');
 const saveSheetPresetEl = document.getElementById('saveSheetPreset');
@@ -77,6 +78,7 @@ function addCut(v = { name: '', l: '', w: '', mode: 'qty', q: 1 }, focus = false
     updateCount();
     save();
   });
+  d.querySelector('.bend-thumb img')?.addEventListener('click',e=>{const img=e.currentTarget;if(img.style.maxHeight==='none'){img.style.maxHeight='150px'}else{img.style.maxHeight='none';img.scrollIntoView({behavior:'smooth',block:'center'})}});
   d.querySelectorAll('input,select').forEach(i => {
     i.addEventListener('input', save);
     i.addEventListener('change', save);
@@ -152,13 +154,8 @@ function jobSnapshot(){
     done:[...doneParts]
   };
 }
-function renderSavedJobs(){
-  const jobs=storageGet('zinkJobs',[]);
-  if(!jobs.length){ savedJobsEl.innerHTML='<div class="sub">Noch keine Baustellen gespeichert.</div>'; return; }
-  savedJobsEl.innerHTML=jobs.sort((a,b)=>b.updated-a.updated).map(x=>{const d=new Date(x.updated);const date=d.toLocaleDateString('de-DE')+' · '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});return `<div style="padding:12px 0;border-top:1px solid var(--line)"><div class="row"><button type="button" class="secondary open-job grow" data-id="${esc(x.id)}" style="text-align:left"><b>${esc(x.name||'Unbenannte Baustelle')}</b><span style="display:block;color:var(--muted);font-size:11px;margin-top:3px">${date}</span></button><button type="button" class="danger delete-job" data-id="${esc(x.id)}">×</button></div></div>`;}).join('');
-  savedJobsEl.querySelectorAll('.open-job').forEach(b=>b.addEventListener('click',()=>openJob(b.dataset.id)));
-  savedJobsEl.querySelectorAll('.delete-job').forEach(b=>b.addEventListener('click',()=>deleteJob(b.dataset.id)));
-}
+function renderSavedJobs(){const q=(jobSearchEl?.value||'').trim().toLowerCase();const jobs=storageGet('zinkJobs',[]).filter(x=>!q||(x.name||'').toLowerCase().includes(q));if(!jobs.length){savedJobsEl.innerHTML='<div class="sub">'+(q?'Keine passende Baustelle.':'Noch keine Baustellen gespeichert.')+'</div>';return}savedJobsEl.innerHTML=jobs.sort((a,b)=>b.updated-a.updated).map(x=>{const d=new Date(x.updated),date=d.toLocaleDateString('de-DE')+' · '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});return '<div style="padding:12px 0;border-top:1px solid var(--line)"><div class="row"><button type="button" class="secondary open-job grow" data-id="'+esc(x.id)+'" style="text-align:left"><b>'+esc(x.name||'Unbenannte Baustelle')+'</b><span style="display:block;color:var(--muted);font-size:11px;margin-top:3px">Zuletzt bearbeitet: '+date+'</span></button><button type="button" class="danger delete-job" data-id="'+esc(x.id)+'">×</button></div></div>'}).join('');savedJobsEl.querySelectorAll('.open-job').forEach(b=>b.addEventListener('click',()=>openJob(b.dataset.id)));savedJobsEl.querySelectorAll('.delete-job').forEach(b=>b.addEventListener('click',()=>deleteJob(b.dataset.id)))}
+jobSearchEl?.addEventListener('input',renderSavedJobs);
 function saveJob(){
   const name=jobNameEl.value.trim();
   if(!name){ showToast('Bitte Baustellenname eingeben'); jobNameEl.focus(); return; }
@@ -423,7 +420,7 @@ sheetPresetEl?.addEventListener('change',loadSheetPreset);
 deleteSheetPresetEl?.addEventListener('click',deleteSheetPreset);
 
 
-function drawBoxPlate(canvas,l,w,down,hem){if(!canvas)return;const ctx=canvas.getContext('2d'),edge=down+hem;ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#101214';ctx.fillRect(0,0,canvas.width,canvas.height);if(!l||!w){ctx.fillStyle='#9da5ad';ctx.font='22px system-ui';ctx.textAlign='center';ctx.fillText('Länge und Breite eingeben',canvas.width/2,canvas.height/2);return}const W=760,H=440,scale=Math.min(W/(l+2*edge),H/(w+2*edge)),ow=l*scale,oh=w*scale,t=edge*scale,d=down*scale,ox=(canvas.width-(ow+2*t))/2,oy=(canvas.height-(oh+2*t))/2;ctx.fillStyle='rgba(245,189,50,.07)';ctx.fillRect(ox,oy,ow+2*t,oh+2*t);ctx.strokeStyle='#f5bd32';ctx.lineWidth=5;ctx.strokeRect(ox,oy,ow+2*t,oh+2*t);ctx.strokeStyle='#e9edf0';ctx.lineWidth=3;ctx.setLineDash([12,8]);ctx.strokeRect(ox+t,oy+t,ow,oh);if(hem>0){ctx.strokeStyle='#8f99a2';ctx.lineWidth=2;ctx.setLineDash([6,7]);ctx.strokeRect(ox+Math.max(0,t-d),oy+Math.max(0,t-d),ow+2*d,oh+2*d)}ctx.setLineDash([]);ctx.fillStyle='#f4f5f6';ctx.font='bold 25px system-ui';ctx.textAlign='center';ctx.fillText(l+' × '+w+' mm',canvas.width/2,canvas.height/2-8);ctx.fillStyle='#9da5ad';ctx.font='20px system-ui';ctx.fillText('Fertigmaß',canvas.width/2,canvas.height/2+22);ctx.fillText('↓ '+down+' mm'+(hem?'  ↩ '+hem+' mm':''),canvas.width/2,canvas.height/2+54);ctx.fillStyle='#f5bd32';ctx.font='bold 20px system-ui';ctx.fillText('Zuschnitt: '+(l+2*edge)+' × '+(w+2*edge)+' mm',canvas.width/2,canvas.height-26)}function refreshBoxPlate(){drawBoxPlate(document.getElementById('boxCanvas'),+boxL.value||0,+boxW.value||0,+boxDown.value||0,+boxHem.value||0)}function makeBoxSketch(l,w,down,hem){const c=document.createElement('canvas');c.width=900;c.height=620;drawBoxPlate(c,l,w,down,hem);return c.toDataURL('image/png')}['boxL','boxW','boxDown','boxHem'].forEach(id=>document.getElementById(id)?.addEventListener('input',refreshBoxPlate));refreshBoxPlate();document.getElementById('boxAdd')?.addEventListener('click',()=>{const l=+boxL.value,w=+boxW.value,down=+boxDown.value||0,hem=+boxHem.value||0;if(!l||!w){showToast('Fertiglänge und -breite fehlen');return}const edge=down+hem,cutL=l+2*edge,cutW=w+2*edge,sketch=makeBoxSketch(l,w,down,hem);addCut({name:boxName.value.trim()||'Kaminabdeckung',l:cutL,w:cutW,mode:'qty',q:1,sketch},false);showToast('Gezeichnete Platte hinzugefügt');document.querySelector('#cuts')?.scrollIntoView({behavior:'smooth',block:'center'})});
+function boxVals(){return{l:+boxL.value||0,w:+boxW.value||0,t:+boxTop.value||0,r:+boxRight.value||0,b:+boxBottom.value||0,x:+boxLeft.value||0,th:+boxTopHem.value||0,rh:+boxRightHem.value||0,bh:+boxBottomHem.value||0,xh:+boxLeftHem.value||0}}function drawBoxPlate(canvas,v){if(!canvas)return;const c=canvas.getContext('2d');c.clearRect(0,0,canvas.width,canvas.height);c.fillStyle='#101214';c.fillRect(0,0,canvas.width,canvas.height);if(!v.l||!v.w){c.fillStyle='#9da5ad';c.font='22px system-ui';c.textAlign='center';c.fillText('Länge und Breite eingeben',450,310);return}const L=v.x+v.xh,R=v.r+v.rh,T=v.t+v.th,B=v.b+v.bh,cutL=v.l+L+R,cutW=v.w+T+B,s=Math.min(760/cutL,440/cutW),ox=(900-cutL*s)/2,oy=(620-cutW*s)/2,fx=ox+L*s,fy=oy+T*s;c.fillStyle='rgba(245,189,50,.07)';c.fillRect(ox,oy,cutL*s,cutW*s);c.strokeStyle='#f5bd32';c.lineWidth=5;c.strokeRect(ox,oy,cutL*s,cutW*s);c.strokeStyle='#e9edf0';c.lineWidth=3;c.setLineDash([12,8]);c.strokeRect(fx,fy,v.l*s,v.w*s);c.setLineDash([]);c.fillStyle='#f4f5f6';c.font='bold 24px system-ui';c.textAlign='center';c.fillText(v.l+' × '+v.w+' mm',450,300);c.font='18px system-ui';c.fillStyle='#9da5ad';c.fillText('Oben ↓'+v.t+' ↩'+v.th+'   ·   Unten ↓'+v.b+' ↩'+v.bh,450,334);c.fillText('Links ↓'+v.x+' ↩'+v.xh+'   ·   Rechts ↓'+v.r+' ↩'+v.rh,450,362);c.fillStyle='#f5bd32';c.font='bold 20px system-ui';c.fillText('Zuschnitt: '+cutL+' × '+cutW+' mm',450,594)}function refreshBoxPlate(){drawBoxPlate(document.getElementById('boxCanvas'),boxVals())}function makeBoxSketch(v){const c=document.createElement('canvas');c.width=900;c.height=620;drawBoxPlate(c,v);return c.toDataURL('image/png')}['boxL','boxW','boxTop','boxRight','boxBottom','boxLeft','boxTopHem','boxRightHem','boxBottomHem','boxLeftHem'].forEach(id=>document.getElementById(id)?.addEventListener('input',refreshBoxPlate));refreshBoxPlate();document.getElementById('boxAdd')?.addEventListener('click',()=>{const v=boxVals();if(!v.l||!v.w){showToast('Fertiglänge und -breite fehlen');return}const cutL=v.l+v.x+v.xh+v.r+v.rh,cutW=v.w+v.t+v.th+v.b+v.bh;addCut({name:boxName.value.trim()||'Kaminabdeckung',l:cutL,w:cutW,mode:'qty',q:1,sketch:makeBoxSketch(v)},false);showToast('Gezeichnete Platte hinzugefügt');document.querySelector('#cuts')?.scrollIntoView({behavior:'smooth',block:'center'})});
 document.getElementById('add').addEventListener('click',()=>{
   addCut({},true);
   showToast('Neues Teil hinzugefügt');
@@ -436,7 +433,7 @@ document.getElementById('clear').addEventListener('click',()=>{
   cutsEl.innerHTML='';
   sheetL.value=2000; sheetW.value=1000; marginEl.value=0; gapEl.value=0; rotateEl.checked=true;
   jobNameEl.value=''; if(sheetPresetEl) sheetPresetEl.value=''; if(sheetPresetNameEl) sheetPresetNameEl.value='';
-  if(document.getElementById('boxL')) boxL.value=''; if(document.getElementById('boxW')) boxW.value=''; if(document.getElementById('boxDown')) boxDown.value=50; if(document.getElementById('boxHem')) boxHem.value=15; if(document.getElementById('boxName')) boxName.value=''; refreshBoxPlate?.();
+  if(document.getElementById('boxL'))boxL.value='';if(document.getElementById('boxW'))boxW.value='';['boxTop','boxRight','boxBottom','boxLeft'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=50});['boxTopHem','boxRightHem','boxBottomHem','boxLeftHem'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=15});if(document.getElementById('boxName'))boxName.value='';refreshBoxPlate?.();
   bendSegs=[]; bendAngleOverrides={}; bendPreview=null; drawBend();
   localStorage.removeItem('zinkCuts'); localStorage.removeItem('zinkSettings'); localStorage.removeItem('zinkDoneParts');
   addCut();
