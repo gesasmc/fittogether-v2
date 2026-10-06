@@ -431,12 +431,17 @@ document.getElementById('calc').addEventListener('click',()=>render({scrollToRes
 
 
 document.getElementById('clear').addEventListener('click',()=>{
-  doneParts.clear(); saveDone();
+  doneParts.clear(); saveDone(); activeJobId=null;
   cutsEl.innerHTML='';
+  sheetL.value=2000; sheetW.value=1000; marginEl.value=0; gapEl.value=0; rotateEl.checked=true;
+  jobNameEl.value=''; if(sheetPresetEl) sheetPresetEl.value=''; if(sheetPresetNameEl) sheetPresetNameEl.value='';
+  if(document.getElementById('boxL')) boxL.value=''; if(document.getElementById('boxW')) boxW.value=''; if(document.getElementById('boxDown')) boxDown.value=50; if(document.getElementById('boxHem')) boxHem.value=15; if(document.getElementById('boxName')) boxName.value=''; refreshBoxPlate?.();
+  bendSegs=[]; bendAngleOverrides={}; bendPreview=null; drawBend();
+  localStorage.removeItem('zinkCuts'); localStorage.removeItem('zinkSettings'); localStorage.removeItem('zinkDoneParts');
   addCut();
   results.innerHTML='<h2>Ergebnis</h2><div class="sub">Noch keine Berechnung.</div>';
   save();
-  showToast('Zurückgesetzt');
+  showToast('Alles zurückgesetzt');
 });
 [sheetL,sheetW,marginEl,gapEl,rotateEl].forEach(el=>{
   el.addEventListener('input',save);
